@@ -1,0 +1,49 @@
+@compiler >= 4.2
+
+include "List.aes"
+
+contract OracleService =
+
+  type oracle_query_tuples = list(oracle(string, string) * oracle_query(string, string))
+
+  record state =
+    { trusted_oracles : list(oracle(string, string))
+    , oracle_queries : map(string, oracle_query_tuples) }
+
+  entrypoint init() = {trusted_oracles = [], oracle_queries = {}}
+
+  // TODO: require "admin" to add trusted oracle, later reputation system
+  stateful entrypoint add_oracle(oracle : oracle(string, string)) =
+    require(Oracle.check(oracle), "ORACLE_CHECK_FAILED")
+    put(state{ trusted_oracles = oracle :: state.trusted_oracles})
+
+  entrypoint estimate_query_fee() : int =
+    List.sum(List.map((oracle) => Oracle.query_fee(oracle), state.trusted_oracles))
+
+  // TODO: adjust ttls
+  payable stateful entrypoint query_oracle(url : string) : oracle_query_tuples =
+    let query_oracle = (oracle) => (oracle, Oracle.query(oracle, url, Oracle.query_fee(oracle), RelativeTTL(10), RelativeTTL(10)))
+    let queries = List.map(query_oracle, state.trusted_oracles)
+    put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
+    queries
+
+  // TODO: persist url as approved, cleanup state
+  // TODO: minimum amount of oracles needed, threshold adjustment
+  entrypoint check_claim(url : string) : bool =
+    let oracle_answers = check_oracle_answers(url)
+    let answers_length = List.length(oracle_answers)
+    let is_positive = (answer) => switch(answer)
+      Some(response) => response
+      None => false
+    let positive_answers_length = List.length(List.map(is_positive, oracle_answers))
+    let percentage = positive_answers_length * 100 / answers_length
+    percentage > 50
+
+  // TODO: use Call.origin eventually?
+  entrypoint check_oracle_answers(url : string) : list(option(bool)) =
+    let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))
+      Some(response) => Some(response == Address.to_str(Call.caller))
+      None => None
+    [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url] ]
+
+  entrypoint get_state() = state

@@ -1,0 +1,16 @@
+{
+  "name": "tipping-oracle-service",
+  "version": "1.0.0",
+  "description": "This is the default package.json generated for your project",
+  "main": "index.js",
+  "scripts": {
+    "node-compiler": "aeproject node && aeproject compiler",
+    "test": "aeproject test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aeternity/aepp-sdk": "^7.0.0-next.3",
+    "aeproject-lib": "^2.1.1"
+  }
+}
