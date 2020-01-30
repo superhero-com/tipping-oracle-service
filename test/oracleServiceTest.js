@@ -33,8 +33,6 @@ describe('Oracle Service Contract', () => {
                 name: 'devnetNode',
                 instance: await Node(config)
             }],
-            url: config.host,
-            internalUrl: config.internalHost,
             accounts: [MemoryAccount({
                 keypair: wallets[0]
             })],
