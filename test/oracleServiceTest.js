@@ -14,7 +14,8 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
-const {Universal, MemoryAccount, Node} = require('@aeternity/aepp-sdk');
+const {Universal, MemoryAccount, Node, Crypto} = require('@aeternity/aepp-sdk');
+const Oracle = require('../server/oracleService.js');
 
 const ORACLE_SERVICE_CONTRACT_PATH = utils.readFileRelative('./contracts/OracleService.aes', 'utf-8');
 
@@ -24,8 +25,19 @@ const config = {
     compilerUrl: 'http://localhost:3080'
 };
 
+const initializeOracleService = async (client, mockOracleResponse) => {
+    const keyPair = Crypto.generateKeyPair();
+    await client.spend(2000000000000000, keyPair.publicKey);
+
+    const oracleService = new Oracle(mockOracleResponse);
+    await oracleService.init(keyPair);
+    await oracleService.register(50000);
+    await oracleService.startPolling();
+    return oracleService;
+};
+
 describe('Oracle Service Contract', () => {
-    let contract;
+    let contract, oracleService;
 
     before(async () => {
         client = await Universal({
@@ -39,9 +51,15 @@ describe('Oracle Service Contract', () => {
             networkId: 'ae_devnet',
             compilerUrl: config.compilerUrl
         });
+
+        oracleService = await initializeOracleService(client, wallets[0].publicKey);
     });
 
-    it('Deploying Example Contract', async () => {
+    after(async () => {
+        oracleService.stopPolling();
+    });
+
+    it('Deploying Oracle Service Contract', async () => {
         contract = await client.getContractInstance(ORACLE_SERVICE_CONTRACT_PATH);
         const init = await contract.methods.init();
         assert.equal(init.result.returnType, 'ok');
