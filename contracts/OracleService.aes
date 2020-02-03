@@ -9,13 +9,17 @@ contract OracleService =
   record state =
     { trusted_oracles : list(oracle(string, string))
     , oracle_queries : map(string, oracle_query_tuples)
-    , minimum_amount_of_oracles : int }
+    , minimum_amount_of_oracles : int
+    , owner : address }
 
-  entrypoint init(minimum_amount_of_oracles : int) =
-    { trusted_oracles = [], oracle_queries = {}, minimum_amount_of_oracles = minimum_amount_of_oracles }
+  entrypoint init(minimum_amount_of_oracles : int, owner : address) =
+    { trusted_oracles = [],
+      oracle_queries = {},
+      minimum_amount_of_oracles = minimum_amount_of_oracles,
+      owner = owner }
 
-  // TODO: require "admin" to add trusted oracle, later reputation system
   stateful entrypoint add_oracle(oracle : oracle(string, string)) =
+    require_owner()
     require(Oracle.check(oracle), "ORACLE_CHECK_FAILED")
     put(state{ trusted_oracles = oracle :: state.trusted_oracles})
 
@@ -50,4 +54,7 @@ contract OracleService =
   entrypoint get_state() = state
 
   function require_minimum_amount_of_oracles() =
-    require(List.length(state.trusted_oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_NEEDED")
+    require(List.length(state.trusted_oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_REQUIRED")
+
+  function require_owner() =
+    require(Call.caller == state.owner, "OWNER_REQUIRED")

@@ -63,7 +63,7 @@ describe('Oracle Service Contract', () => {
 
     it('Deploying Oracle Service Contract', async () => {
         contract = await client.getContractInstance(ORACLE_SERVICE_CONTRACT_PATH);
-        const init = await contract.methods.init(numberOfOracles);
+        const init = await contract.methods.init(numberOfOracles, wallets[0].publicKey);
         assert.equal(init.result.returnType, 'ok');
     });
 
