@@ -8,9 +8,11 @@ contract OracleService =
 
   record state =
     { trusted_oracles : list(oracle(string, string))
-    , oracle_queries : map(string, oracle_query_tuples) }
+    , oracle_queries : map(string, oracle_query_tuples)
+    , minimum_amount_of_oracles : int }
 
-  entrypoint init() = {trusted_oracles = [], oracle_queries = {}}
+  entrypoint init(minimum_amount_of_oracles : int) =
+    { trusted_oracles = [], oracle_queries = {}, minimum_amount_of_oracles = minimum_amount_of_oracles }
 
   // TODO: require "admin" to add trusted oracle, later reputation system
   stateful entrypoint add_oracle(oracle : oracle(string, string)) =
@@ -22,13 +24,13 @@ contract OracleService =
 
   // TODO: adjust ttls
   payable stateful entrypoint query_oracle(url : string) : oracle_query_tuples =
+    require_minimum_amount_of_oracles()
     let query_oracle = (oracle) => (oracle, Oracle.query(oracle, url, Oracle.query_fee(oracle), RelativeTTL(10), RelativeTTL(10)))
     let queries = List.map(query_oracle, state.trusted_oracles)
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
     queries
 
   // TODO: persist url as approved, cleanup state
-  // TODO: minimum amount of oracles needed, threshold adjustment
   entrypoint check_claim(url : string) : bool =
     let oracle_answers = check_oracle_answers(url)
     let answers_length = List.length(oracle_answers)
@@ -39,7 +41,6 @@ contract OracleService =
     let percentage = positive_answers_length * 100 / answers_length
     percentage > 50
 
-  // TODO: use Call.origin eventually?
   entrypoint check_oracle_answers(url : string) : list(option(bool)) =
     let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))
       Some(response) => Some(response == Address.to_str(Call.caller))
@@ -47,3 +48,6 @@ contract OracleService =
     [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url] ]
 
   entrypoint get_state() = state
+
+  function require_minimum_amount_of_oracles() =
+    require(List.length(state.trusted_oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_NEEDED")

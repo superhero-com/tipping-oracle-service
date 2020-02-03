@@ -16,6 +16,7 @@
  */
 const {Universal, MemoryAccount, Node, Crypto} = require('@aeternity/aepp-sdk');
 const Oracle = require('../server/oracleService.js');
+const util = require('../server/util');
 
 const ORACLE_SERVICE_CONTRACT_PATH = utils.readFileRelative('./contracts/OracleService.aes', 'utf-8');
 
@@ -37,7 +38,8 @@ const initializeOracleService = async (client, mockOracleResponse) => {
 };
 
 describe('Oracle Service Contract', () => {
-    let contract, oracleService;
+    let contract, oracleServices;
+    let numberOfOracles = 3;
 
     before(async () => {
         client = await Universal({
@@ -52,39 +54,42 @@ describe('Oracle Service Contract', () => {
             compilerUrl: config.compilerUrl
         });
 
-        oracleService = await initializeOracleService(client, wallets[0].publicKey);
+        oracleServices = await util.range(1, numberOfOracles).asyncMap(() => initializeOracleService(client, wallets[0].publicKey));
     });
 
     after(async () => {
-        oracleService.stopPolling();
+        oracleServices.map(oracleService => oracleService.stopPolling());
     });
 
     it('Deploying Oracle Service Contract', async () => {
         contract = await client.getContractInstance(ORACLE_SERVICE_CONTRACT_PATH);
-        const init = await contract.methods.init();
+        const init = await contract.methods.init(numberOfOracles);
         assert.equal(init.result.returnType, 'ok');
     });
 
-    it('Oracle Service Contract: Add Oracle', async () => {
-        const addOracle = await contract.methods.add_oracle(oracleService.oracle.id);
-        assert.equal(addOracle.result.returnType, 'ok');
+    it('Oracle Service Contract: Add Oracles', async () => {
+        await oracleServices.asyncMap(async (oracleService) => {
+            const addOracle = await contract.methods.add_oracle(oracleService.oracle.id);
+            assert.equal(addOracle.result.returnType, 'ok');
+        });
     });
 
     it('Oracle Service Contract: Estimate Query Fee', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
-        assert.equal(queryFee.decodedResult, 50000);
+        assert.equal(queryFee.decodedResult, 50000 * numberOfOracles);
     });
 
     it('Oracle Service Contract: Query Oracle', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
         const queryOracle = await contract.methods.query_oracle("https://example.com", {amount: queryFee.decodedResult});
-        assert.equal(queryOracle.decodedResult[0][0], oracleService.oracle.id);
+        assert.deepEqual(queryOracle.decodedResult.map(([id, _]) => id).sort(), oracleServices.map(oracleService => oracleService.oracle.id).sort());
         await new Promise((resolve) => setTimeout(() => resolve(), 2000));
     });
 
     it('Oracle Service Contract: Check Oracle Answers', async () => {
         const oracleAnswers = await contract.methods.check_oracle_answers("https://example.com");
-        assert.equal(oracleAnswers.decodedResult[0], true);
+        assert.equal(oracleAnswers.decodedResult.length, numberOfOracles);
+        assert.equal(oracleAnswers.decodedResult.every(x => x), true);
     });
 
     it('Oracle Service Contract: Check Claim', async () => {
