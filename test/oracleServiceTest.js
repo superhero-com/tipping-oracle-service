@@ -63,6 +63,32 @@ describe('Oracle Service Contract', () => {
         contract = await client.getContractInstance(ORACLE_SERVICE_CONTRACT_PATH);
         const init = await contract.methods.init();
         assert.equal(init.result.returnType, 'ok');
-    })
+    });
 
+    it('Oracle Service Contract: Add Oracle', async () => {
+        const addOracle = await contract.methods.add_oracle(oracleService.oracle.id);
+        assert.equal(addOracle.result.returnType, 'ok');
+    });
+
+    it('Oracle Service Contract: Estimate Query Fee', async () => {
+        const queryFee = await contract.methods.estimate_query_fee();
+        assert.equal(queryFee.decodedResult, 50000);
+    });
+
+    it('Oracle Service Contract: Query Oracle', async () => {
+        const queryFee = await contract.methods.estimate_query_fee();
+        const queryOracle = await contract.methods.query_oracle("https://example.com", {amount: queryFee.decodedResult});
+        assert.equal(queryOracle.decodedResult[0][0], oracleService.oracle.id);
+        await new Promise((resolve) => setTimeout(() => resolve(), 2000));
+    });
+
+    it('Oracle Service Contract: Check Oracle Answers', async () => {
+        const oracleAnswers = await contract.methods.check_oracle_answers("https://example.com");
+        assert.equal(oracleAnswers.decodedResult[0], true);
+    });
+
+    it('Oracle Service Contract: Check Claim', async () => {
+        const checkClaim = await contract.methods.check_claim("https://example.com");
+        assert.equal(checkClaim.decodedResult, true);
+    });
 });
