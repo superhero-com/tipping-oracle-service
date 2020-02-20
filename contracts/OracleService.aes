@@ -26,16 +26,23 @@ contract OracleService =
 
   type oracle_query_tuples = list(oracle(string, string) * oracle_query(string, string))
 
+  record success_claim =
+    { success : bool
+    , caller : address
+    , percentage : int }
+
   record state =
     { trusted_oracles : list(oracle(string, string))
     , oracle_queries : map(string, oracle_query_tuples)
     , minimum_amount_of_oracles : int
+    , success_claimed_urls : map(string, success_claim)
     , owner : address }
 
   entrypoint init(minimum_amount_of_oracles : int, owner : address) =
     { trusted_oracles = [],
       oracle_queries = {},
       minimum_amount_of_oracles = minimum_amount_of_oracles,
+      success_claimed_urls = {},
       owner = owner }
 
   stateful entrypoint add_oracle(oracle : oracle(string, string)) =
@@ -46,24 +53,33 @@ contract OracleService =
   entrypoint estimate_query_fee() : int =
     List.sum(List.map((oracle) => Oracle.query_fee(oracle), state.trusted_oracles))
 
-  // TODO: adjust ttls
   payable stateful entrypoint query_oracle(url : string) : oracle_query_tuples =
     require_minimum_amount_of_oracles()
-    let query_oracle = (oracle) => (oracle, Oracle.query(oracle, url, Oracle.query_fee(oracle), RelativeTTL(10), RelativeTTL(10)))
+    let query_oracle = (oracle) => (oracle, Oracle.query(oracle, url, Oracle.query_fee(oracle), RelativeTTL(20), RelativeTTL(20)))
     let queries = List.map(query_oracle, state.trusted_oracles)
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
     queries
 
-  // TODO: persist url as approved, cleanup state
-  entrypoint check_claim(url : string) : bool =
+  stateful entrypoint check_persist_claim(url : string) : success_claim =
+    let success_claim = state.success_claimed_urls[url = { success = false, caller = Call.caller, percentage = 0 }]
+    if(success_claim.success)
+      success_claim
+    else
+      let checked_claim = check_claim(url)
+      put(state{ success_claimed_urls = state.success_claimed_urls{ [url] = checked_claim } })
+      checked_claim
+
+  stateful function check_claim(url : string) : success_claim =
     let oracle_answers = check_oracle_answers(url)
     let answers_length = List.length(oracle_answers)
     let is_positive = (answer) => switch(answer)
       Some(response) => response
       None => false
-    let positive_answers_length = List.length(List.map(is_positive, oracle_answers))
+    let positive_answers_length = List.length(List.filter(is_positive, oracle_answers))
     let percentage = positive_answers_length * 100 / answers_length
-    percentage > 50
+    let success = percentage > 50
+    if(success) put(state{ oracle_queries = Map.delete(url, state.oracle_queries) }) else ()
+    { success = success, caller = Call.caller, percentage = percentage }
 
   entrypoint check_oracle_answers(url : string) : list(option(bool)) =
     let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))

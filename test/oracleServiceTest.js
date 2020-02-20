@@ -89,11 +89,10 @@ describe('Oracle Service Contract', () => {
     it('Oracle Service Contract: Check Oracle Answers', async () => {
         const oracleAnswers = await contract.methods.check_oracle_answers("https://example.com");
         assert.equal(oracleAnswers.decodedResult.length, numberOfOracles);
-        assert.equal(oracleAnswers.decodedResult.every(x => x), true);
     });
 
     it('Oracle Service Contract: Check Claim', async () => {
-        const checkClaim = await contract.methods.check_claim("https://example.com");
-        assert.equal(checkClaim.decodedResult, true);
+        const checkClaim = await contract.methods.check_persist_claim("https://example.com");
+        assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, caller: wallets[0].publicKey});
     });
 });

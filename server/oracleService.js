@@ -42,7 +42,7 @@ module.exports = class OracleService {
     startPolling = async () => {
         if (!this.client) throw "Client not initialized";
 
-        if (!this.oracle) this.oracle = await this.client.getOracleObject('ok_fUq2NesPXcYZ1CcqBcGC3StpdnQw3iVxMA3YSeCNAwfN4myQk');
+        //if (!this.oracle) this.oracle = await this.client.getOracleObject('ok_fUq2NesPXcYZ1CcqBcGC3StpdnQw3iVxMA3YSeCNAwfN4myQk');
         this.stopPollQueries = await this.oracle.pollQueries(this.respond, {interval: 2000});
         console.log("Oracle Polling started")
     };
@@ -56,7 +56,7 @@ module.exports = class OracleService {
         //console.log(queryObject);
         //console.log("decoded query", String(Crypto.decodeBase64Check(query.query.slice(3))));
        //console.log("decoded response", String(Crypto.decodeBase64Check(query.response.slice(3))));
-        await this.oracle.respondToQuery(query.id, this.mockOracleResponse);
+        await this.oracle.respondToQuery(query.id, this.mockOracleResponse, {responseTtl : { type: 'delta', value: 20 }});
         console.log("Oracle Respond: Responded");
         this.client.pollForQueryResponse(this.oracle.id, query.id, {attempts: 200, interval: 500}).then(response => {
             console.log("Oracle Respond: got response")
