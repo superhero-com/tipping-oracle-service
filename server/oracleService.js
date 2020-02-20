@@ -10,6 +10,7 @@ module.exports = class OracleService {
     client;
     oracle;
     mockOracleResponse;
+    stopPollQueries;
 
     constructor(mockOracleResponse) {
         this.mockOracleResponse = mockOracleResponse;
@@ -42,7 +43,7 @@ module.exports = class OracleService {
         if (!this.client) throw "Client not initialized";
 
         if (!this.oracle) this.oracle = await this.client.getOracleObject('ok_fUq2NesPXcYZ1CcqBcGC3StpdnQw3iVxMA3YSeCNAwfN4myQk');
-        this.oracle.pollQueries(this.respond, {interval: 2000});
+        this.stopPollQueries = await this.oracle.pollQueries(this.respond, {interval: 2000});
         console.log("Oracle Polling started")
     };
 
@@ -63,8 +64,8 @@ module.exports = class OracleService {
     };
 
     stopPolling = () => {
+        if(this.stopPollQueries) this.stopPollQueries();
         console.log("Oracle Polling stopped");
-        process.exit(0);
     };
 };
 
