@@ -68,7 +68,7 @@ contract OracleService =
     queries
 
   stateful entrypoint check_persist_claim(url : string) : success_claim =
-    let success_claim = state.success_claimed_urls[url = { success = false, caller = Call.caller, percentage = 0 }]
+    let success_claim = state.success_claimed_urls[url = { success = false, caller = Call.origin, percentage = 0 }]
     if(success_claim.success)
       success_claim
     else
@@ -86,11 +86,11 @@ contract OracleService =
     let percentage = positive_answers_length * 100 / answers_length
     let success = percentage > 50
     if(success) put(state{ oracle_queries = Map.delete(url, state.oracle_queries) }) else ()
-    { success = success, caller = Call.caller, percentage = percentage }
+    { success = success, caller = Call.origin, percentage = percentage }
 
   entrypoint check_oracle_answers(url : string) : list(option(bool)) =
     let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))
-      Some(response) => Some(response == Address.to_str(Call.caller))
+      Some(response) => Some(response == Address.to_str(Call.origin))
       None => None
     [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url] ]
 
