@@ -95,4 +95,16 @@ describe('Oracle Service Contract', () => {
         const checkClaim = await contract.methods.check_persist_claim("https://example.com");
         assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, caller: wallets[0].publicKey});
     });
+
+    it('Oracle Service Contract: Delete Oracle', async () => {
+        const deleteOracle = await contract.methods.remove_oracle(1);
+        assert.equal(deleteOracle.result.returnType, 'ok');
+
+        const state = (await contract.methods.get_state()).decodedResult;
+        assert.lengthOf(state.trusted_oracles, numberOfOracles - 1);
+
+        const queryFee = await contract.methods.estimate_query_fee();
+        const queryOracle = await contract.methods.query_oracle("https://example.com", {amount: queryFee.decodedResult}).catch(e => e);
+        assert.include(queryOracle.decodedError, "MORE_ORACLES_REQUIRED");
+    });
 });
