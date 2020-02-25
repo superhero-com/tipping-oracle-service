@@ -87,13 +87,13 @@ describe('Oracle Service Contract', () => {
     });
 
     it('Oracle Service Contract: Check Oracle Answers', async () => {
-        const oracleAnswers = await contract.methods.check_oracle_answers("https://example.com");
+        const oracleAnswers = await contract.methods.check_oracle_answers("https://example.com", wallets[0].publicKey);
         assert.equal(oracleAnswers.decodedResult.length, numberOfOracles);
     });
 
     it('Oracle Service Contract: Check Claim', async () => {
-        const checkClaim = await contract.methods.check_persist_claim("https://example.com");
-        assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, caller: wallets[0].publicKey});
+        const checkClaim = await contract.methods.check_persist_claim("https://example.com", wallets[0].publicKey);
+        assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, account: wallets[0].publicKey});
     });
 
     it('Oracle Service Contract: Delete Oracle', async () => {

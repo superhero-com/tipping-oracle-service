@@ -29,7 +29,7 @@ contract OracleService =
 
   record success_claim =
     { success : bool
-    , caller : address
+    , account : address
     , percentage : int }
 
   record state =
@@ -67,17 +67,17 @@ contract OracleService =
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
     queries
 
-  stateful entrypoint check_persist_claim(url : string) : success_claim =
-    let success_claim = state.success_claimed_urls[url = { success = false, caller = Call.origin, percentage = 0 }]
+  stateful entrypoint check_persist_claim(url : string, account : address) : success_claim =
+    let success_claim = state.success_claimed_urls[url = { success = false, account = account, percentage = 0 }]
     if(success_claim.success)
       success_claim
     else
-      let checked_claim = check_claim(url)
+      let checked_claim = check_claim(url, account)
       put(state{ success_claimed_urls[url] = checked_claim })
       checked_claim
 
-  stateful function check_claim(url : string) : success_claim =
-    let oracle_answers = check_oracle_answers(url)
+  stateful function check_claim(url : string, account : address) : success_claim =
+    let oracle_answers = check_oracle_answers(url, account)
     let answers_length = List.length(oracle_answers)
     let is_positive = (answer) => switch(answer)
       Some(response) => response
@@ -86,11 +86,11 @@ contract OracleService =
     let percentage = positive_answers_length * 100 / answers_length
     let success = percentage > 50
     if(success) put(state{ oracle_queries = Map.delete(url, state.oracle_queries) }) else ()
-    { success = success, caller = Call.origin, percentage = percentage }
+    { success = success, account = account, percentage = percentage }
 
-  entrypoint check_oracle_answers(url : string) : list(option(bool)) =
+  entrypoint check_oracle_answers(url : string, account : address) : list(option(bool)) =
     let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))
-      Some(response) => Some(response == Address.to_str(Call.origin))
+      Some(response) => Some(response == Address.to_str(account))
       None => None
     [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url] ]
 
