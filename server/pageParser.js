@@ -4,9 +4,9 @@ const Aeternity = require("./aeternity");
 
 module.exports = class PageParser {
 
-  constructor() {
+  constructor(aeternity = null) {
     this.snippetLoader = new SnippetLoader();
-    this.aeternity = new Aeternity();
+    this.aeternity = aeternity ? aeternity : new Aeternity();
   }
 
   async getAddressesFromPage(url) {

@@ -1,10 +1,10 @@
-const {Universal, MemoryAccount, Node, Crypto} = require('@aeternity/aepp-sdk');
+const {Crypto} = require('@aeternity/aepp-sdk');
 const Aeternity = require("./aeternity");
+const PageParser = require("./pageParser");
 
 module.exports = class OracleService {
 
-  constructor(mockOracleResponse) {
-    this.mockOracleResponse = mockOracleResponse;
+  constructor() {
     this.fundingAmount = 50000000000000;
   }
 
@@ -13,14 +13,16 @@ module.exports = class OracleService {
     await this.aeternity.init(keyPair);
     await this.aeternity.awaitFunding(this.fundingAmount);
 
+    this.pageParser = new PageParser(this.aeternity);
+
     console.log("Oracle Client initialized");
   };
 
-  register = async (queryFee) => {
+  register = async (queryFee = 20000000000000) => {
     if (!this.aeternity.client) throw "Client not initialized";
 
     this.oracle = await this.aeternity.client.registerOracle("string", "string", {queryFee: queryFee});
-    console.log("Oracle registered");
+    console.log("Oracle registered", this.oracle.id);
   };
 
   startPolling = async () => {
@@ -34,17 +36,13 @@ module.exports = class OracleService {
   respond = async (queries) => {
     let query = Array.isArray(queries) ? queries.sort((a, b) => a.ttl - b.ttl)[queries.length - 1] : queries;
     if (!query) return;
-    console.log("Oracle Respond: got query");
 
-    //const queryObject = await this.oracle.getQuery(query.id);
-    //console.log(queryObject);
-    //console.log("decoded query", String(Crypto.decodeBase64Check(query.query.slice(3))));
-    //console.log("decoded response", String(Crypto.decodeBase64Check(query.response.slice(3))));
-    //estimate fee 17792000000000
-    await this.oracle.respondToQuery(query.id, this.mockOracleResponse, {responseTtl: {type: 'delta', value: 20}});
-    this.aeternity.client.pollForQueryResponse(this.oracle.id, query.id, {attempts: 200, interval: 500}).then(response => {
-      console.log("Oracle Respond: got response")
-    });
+    const queryArgument = String(Crypto.decodeBase64Check(query.query.slice(3)));
+    const parseResult = await this.pageParser.getAddressesFromPage(queryArgument);
+    console.log("Oracle Respond: got query", queryArgument);
+    console.log("Oracle Respond: will respond", parseResult[0]);
+
+    await this.oracle.respondToQuery(query.id, parseResult[0], {responseTtl: {type: 'delta', value: 20}});
   };
 
   stopPolling = () => {
