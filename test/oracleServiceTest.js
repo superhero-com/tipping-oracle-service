@@ -28,11 +28,10 @@ const config = {
 
 const initializeOracleService = async (client, mockOracleResponse) => {
     const keyPair = Crypto.generateKeyPair();
-    await client.spend(2000000000000000, keyPair.publicKey);
-
+    await client.spend(50000000000000, keyPair.publicKey);
     const oracleService = new Oracle(mockOracleResponse);
     await oracleService.init(keyPair);
-    await oracleService.register(50000);
+    await oracleService.register(20000000000000);
     await oracleService.startPolling();
     return oracleService;
 };
@@ -47,9 +46,7 @@ describe('Oracle Service Contract', () => {
                 name: 'devnetNode',
                 instance: await Node(config)
             }],
-            accounts: [MemoryAccount({
-                keypair: wallets[0]
-            })],
+            accounts: [MemoryAccount({keypair: wallets[0]})],
             networkId: 'ae_devnet',
             compilerUrl: config.compilerUrl
         });
@@ -76,7 +73,7 @@ describe('Oracle Service Contract', () => {
 
     it('Oracle Service Contract: Estimate Query Fee', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
-        assert.equal(queryFee.decodedResult, 50000 * numberOfOracles);
+        assert.equal(queryFee.decodedResult, 20000000000000 * numberOfOracles);
     });
 
     it('Oracle Service Contract: Query Oracle', async () => {

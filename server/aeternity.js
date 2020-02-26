@@ -1,24 +1,47 @@
-const { Universal, Node, MemoryAccount } = require('@aeternity/aepp-sdk');
+const {Universal, Node, MemoryAccount, Crypto} = require('@aeternity/aepp-sdk');
+const qrcode = require('qrcode-terminal');
+const BigNumber = require("bignumber.js");
+
+const util = require("./util");
+
+const config = {
+  url: 'http://localhost:3001/',
+  internalUrl: 'http://localhost:3001/',
+  compilerUrl: 'http://localhost:3080'
+};
 
 module.exports = class Aeternity {
-  constructor () {
-    this.init();
-  }
 
-  init = async () => {
+  init = async (keyPair) => {
     if (!this.client) {
+      this.keypair = keyPair ? keyPair : Crypto.generateKeyPair();
       this.client = await Universal({
         nodes: [
           {
             name: 'mainnetNode',
             instance: await Node({
-              url: process.env.NODE_URL,
-              internalUrl: process.env.NODE_URL,
+              url: process.env.NODE_URL || config.url,
+              internalUrl: process.env.NODE_URL || config.internalUrl,
             }),
           }],
-        accounts: [
-          MemoryAccount({ keypair: { secretKey: process.env.PRIVATE_KEY, publicKey: process.env.PUBLIC_KEY } }),
-        ],
+        accounts: [MemoryAccount({keypair: this.keypair})],
+      });
+    }
+  };
+
+  awaitFunding = async (fundingAmount) => {
+    if (!this.client) throw "Client not initialized";
+    if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isLessThan(fundingAmount)) {
+      qrcode.generate(this.keypair.publicKey, {small: true});
+      console.log("Fund Oracle Service Wallet", this.keypair.publicKey, util.atomsToAe(fundingAmount).toFixed(), "AE");
+      await new Promise(resolve => {
+        const interval = setInterval(async () => {
+          if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isGreaterThanOrEqualTo(fundingAmount)) {
+            console.log("received funding");
+            resolve(true);
+            clearInterval(interval);
+          }
+        }, 1000);
       });
     }
   };
