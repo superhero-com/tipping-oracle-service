@@ -26,12 +26,12 @@ const config = {
     compilerUrl: 'http://localhost:3080'
 };
 
-const initializeOracleService = async (client, mockOracleResponse) => {
+const initializeOracleService = async (client) => {
     const keyPair = Crypto.generateKeyPair();
     await client.spend(50000000000000, keyPair.publicKey);
-    const oracleService = new Oracle(mockOracleResponse);
+    const oracleService = new Oracle();
     await oracleService.init(keyPair);
-    await oracleService.register(20000000000000);
+    await oracleService.register();
     await oracleService.startPolling();
     return oracleService;
 };
@@ -51,7 +51,7 @@ describe('Oracle Service Contract', () => {
             compilerUrl: config.compilerUrl
         });
 
-        oracleServices = await util.range(1, numberOfOracles).asyncMap(() => initializeOracleService(client, wallets[0].publicKey));
+        oracleServices = await util.range(1, numberOfOracles).asyncMap(() => initializeOracleService(client));
     });
 
     after(async () => {
@@ -78,18 +78,18 @@ describe('Oracle Service Contract', () => {
 
     it('Oracle Service Contract: Query Oracle', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
-        const queryOracle = await contract.methods.query_oracle("https://example.com", {amount: queryFee.decodedResult});
+        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult});
         assert.deepEqual(queryOracle.decodedResult.map(([id, _]) => id).sort(), oracleServices.map(oracleService => oracleService.oracle.id).sort());
         await new Promise((resolve) => setTimeout(() => resolve(), 2000));
     });
 
     it('Oracle Service Contract: Check Oracle Answers', async () => {
-        const oracleAnswers = await contract.methods.check_oracle_answers("https://example.com", wallets[0].publicKey);
+        const oracleAnswers = await contract.methods.check_oracle_answers("http://localhost:3001/sample-site.txt", wallets[0].publicKey);
         assert.equal(oracleAnswers.decodedResult.length, numberOfOracles);
     });
 
     it('Oracle Service Contract: Check Claim', async () => {
-        const checkClaim = await contract.methods.check_persist_claim("https://example.com", wallets[0].publicKey);
+        const checkClaim = await contract.methods.check_persist_claim("http://localhost:3001/sample-site.txt", wallets[0].publicKey);
         assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, account: wallets[0].publicKey});
     });
 
@@ -101,7 +101,7 @@ describe('Oracle Service Contract', () => {
         assert.lengthOf(state.trusted_oracles, numberOfOracles - 1);
 
         const queryFee = await contract.methods.estimate_query_fee();
-        const queryOracle = await contract.methods.query_oracle("https://example.com", {amount: queryFee.decodedResult}).catch(e => e);
+        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult}).catch(e => e);
         assert.include(queryOracle.decodedError, "MORE_ORACLES_REQUIRED");
     });
 });

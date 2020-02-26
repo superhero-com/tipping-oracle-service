@@ -31,6 +31,7 @@ module.exports = class Aeternity {
 
   awaitFunding = async (fundingAmount) => {
     if (!this.client) throw "Client not initialized";
+
     if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isLessThan(fundingAmount)) {
       qrcode.generate(this.keypair.publicKey, {small: true});
       console.log("Fund Oracle Service Wallet", this.keypair.publicKey, util.atomsToAe(fundingAmount).toFixed(), "AE");
@@ -47,6 +48,8 @@ module.exports = class Aeternity {
   };
 
   getAddressFromChainName = async (names) => {
+    if (!this.client) throw "Client not initialized";
+
     return (await Promise.all(names.map(async n => {
       try {
         const queryResult = await this.client.aensQuery(n);
