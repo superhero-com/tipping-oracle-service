@@ -1,24 +1,18 @@
-// load snippet from git
+const fs = require("fs");
+const path = require("path");
 
-const axios = require('axios');
+module.exports = class SnippetLoader {
 
-class Snippet {
-  constructor(url) {
-    this.url = url;
-    this.data = null;
+  constructor() {
+    const data = fs.readFileSync(path.resolve(__dirname, "../config/regex-snippets.txt"), "utf8");
+    this.data = this.parseSnippetFile(data);
   }
 
-  async init() {
-    if (this.data) return;
-    const {data} = await axios.get(this.url);
-    this.data = this.parse(data);
-  }
-
-  parse(rawData) {
+  parseSnippetFile(rawData) {
     const rows = rawData.split('\n');
     return rows.map(row => {
       row = row.trim();
-      if(row.length === 0) return null;
+      if (row.length === 0) return null;
       const splitRow = row.split(' ');
       return {
         urlRegex: splitRow.shift(),
@@ -31,13 +25,6 @@ class Snippet {
     if (!this.data) throw Error("init not done yet");
 
     const cutUrl = url.replace(/(^\w+:|^)\/\//, ''); // Removes protocol
-    const result = this.data.find(({urlRegex}) => !!cutUrl.match(urlRegex));
-    if (result) {
-      console.info("Found regex", result);
-      return result
-    } else {
-      console.info("Could not find matching regex");
-      return null;
-    }
+    return this.data.filter(({urlRegex}) => !!cutUrl.match(urlRegex));
   }
-}
+};
