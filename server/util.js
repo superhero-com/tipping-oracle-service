@@ -1,3 +1,4 @@
+const BigNumber = require("bignumber.js");
 const util = {};
 
 util.range = (start, end) => (new Array(end - start + 1)).fill(undefined).map((_, i) => i + start);
@@ -17,5 +18,8 @@ Array.prototype.asyncMap = async function (asyncF) {
         }
     }, Promise.resolve([]));
 };
+
+util.atomsToAe = (atoms) => (new BigNumber(atoms)).dividedBy(new BigNumber(1000000000000000000));
+util.aeToAtoms = (ae) => (new BigNumber(ae)).times(new BigNumber(1000000000000000000));
 
 module.exports = util;
