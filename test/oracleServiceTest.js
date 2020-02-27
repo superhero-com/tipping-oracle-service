@@ -104,4 +104,13 @@ describe('Oracle Service Contract', () => {
         const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult}).catch(e => e);
         assert.include(queryOracle.decodedError, "MORE_ORACLES_REQUIRED");
     });
+
+    it('Oracle Service Contract: Delete Oracle', async () => {
+        const deleteOracle = await contract.methods.set_minimum_amount_of_oracles(2);
+        assert.equal(deleteOracle.result.returnType, 'ok');
+
+        const queryFee = await contract.methods.estimate_query_fee();
+        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult});
+        assert.equal(queryOracle.result.returnType, 'ok');
+    });
 });
