@@ -52,6 +52,7 @@ contract OracleService =
     require(Oracle.check(oracle), "ORACLE_CHECK_FAILED")
     put(state{ trusted_oracles[Map.size(state.trusted_oracles)] = oracle })
 
+  // TODO consider remove active queries
   stateful entrypoint remove_oracle(id : int) =
     require_owner()
     put(state{ trusted_oracles = Map.delete(id, state.trusted_oracles) })

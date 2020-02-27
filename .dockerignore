@@ -1,0 +1,9 @@
+node_modules
+.aeproject-store
+.DS_Store
+*.iml
+.idea
+docker
+test
+deployment
+.data/keypair.json
