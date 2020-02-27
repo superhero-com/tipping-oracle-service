@@ -32,7 +32,6 @@ contract OracleService =
     , account : address
     , percentage : int }
 
-  // TODO allow owner to change amount of oracles
   record state =
     { trusted_oracles : map(int, oracle_type)
     , oracle_queries : map(string, oracle_query_tuples)
@@ -52,10 +51,13 @@ contract OracleService =
     require(Oracle.check(oracle), "ORACLE_CHECK_FAILED")
     put(state{ trusted_oracles[Map.size(state.trusted_oracles)] = oracle })
 
-  // TODO consider remove active queries
   stateful entrypoint remove_oracle(id : int) =
     require_owner()
     put(state{ trusted_oracles = Map.delete(id, state.trusted_oracles) })
+
+  stateful entrypoint set_minimum_amount_of_oracles(minimum_amount_of_oracles : int) =
+    require_owner()
+    put(state{ minimum_amount_of_oracles = minimum_amount_of_oracles })
 
   entrypoint estimate_query_fee() : int =
     estimate_query_fee_iterate(0, Map.to_list(state.trusted_oracles))
