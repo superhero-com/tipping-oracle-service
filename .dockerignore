@@ -7,3 +7,4 @@ docker
 test
 deployment
 .data/keypair.json
+data
