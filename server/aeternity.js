@@ -1,4 +1,6 @@
 const {Universal, Node, MemoryAccount, Crypto} = require('@aeternity/aepp-sdk');
+const fs = require('fs');
+const path = require('path');
 const qrcode = require('qrcode-terminal');
 const BigNumber = require("bignumber.js");
 
@@ -14,7 +16,7 @@ module.exports = class Aeternity {
 
   init = async (keyPair) => {
     if (!this.client) {
-      this.keypair = keyPair ? keyPair : Crypto.generateKeyPair();
+      this.keypair = this.getKeyPair(keyPair);
       this.client = await Universal({
         nodes: [
           {
@@ -26,6 +28,20 @@ module.exports = class Aeternity {
           }],
         accounts: [MemoryAccount({keypair: this.keypair})],
       });
+    }
+  };
+
+  getKeyPair = (defaultKeyPair) => {
+    if (defaultKeyPair) return defaultKeyPair;
+
+    const keypairFile = path.resolve(__dirname, "../.data/keypair.json");
+    const persisted = fs.existsSync(keypairFile);
+    if (persisted) {
+      return JSON.parse(fs.readFileSync(keypairFile), "utf-8");
+    } else {
+      const keypair = Crypto.generateKeyPair();
+      fs.writeFileSync(keypairFile, JSON.stringify(keypair), "utf-8");
+      return keypair;
     }
   };
 

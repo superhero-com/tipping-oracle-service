@@ -32,6 +32,7 @@ contract OracleService =
     , account : address
     , percentage : int }
 
+  // TODO allow owner to change amount of oracles
   record state =
     { trusted_oracles : map(int, oracle_type)
     , oracle_queries : map(string, oracle_query_tuples)
