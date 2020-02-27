@@ -24,7 +24,7 @@ module.exports = class OracleService {
     if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {queryFee: queryFee, oracleTtl: { type: 'delta', value: 500 }});
 
     this.extendIfNeeded();
-    setInterval(() => {
+    this.extendIfNeededInterval = setInterval(() => {
       this.extendIfNeeded();
     }, 100 * 3 * 60 * 1000); // every 100 blocks
     console.log("Oracle Id", this.oracle.id);
@@ -60,6 +60,7 @@ module.exports = class OracleService {
 
   stopPolling = () => {
     if (this.stopPollQueries) this.stopPollQueries();
+    if (this.extendIfNeededInterval) clearInterval(this.extendIfNeededInterval);
     console.log("Oracle Polling stopped");
   };
 };
