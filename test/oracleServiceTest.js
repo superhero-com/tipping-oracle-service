@@ -78,7 +78,7 @@ describe('Oracle Service Contract', () => {
 
     it('Oracle Service Contract: Query Oracle', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
-        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult});
+        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", wallets[0].publicKey, {amount: queryFee.decodedResult});
         assert.deepEqual(queryOracle.decodedResult.map(([id, _]) => id).sort(), oracleServices.map(oracleService => oracleService.oracle.id).sort());
         await new Promise((resolve) => setTimeout(() => resolve(), 2000));
     });
@@ -101,7 +101,7 @@ describe('Oracle Service Contract', () => {
         assert.lengthOf(state.trusted_oracles, numberOfOracles - 1);
 
         const queryFee = await contract.methods.estimate_query_fee();
-        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult}).catch(e => e);
+        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", wallets[0].publicKey, {amount: queryFee.decodedResult}).catch(e => e);
         assert.include(queryOracle.decodedError, "MORE_ORACLES_REQUIRED");
     });
 
@@ -110,7 +110,7 @@ describe('Oracle Service Contract', () => {
         assert.equal(deleteOracle.result.returnType, 'ok');
 
         const queryFee = await contract.methods.estimate_query_fee();
-        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", {amount: queryFee.decodedResult});
+        const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", wallets[0].publicKey, {amount: queryFee.decodedResult});
         assert.equal(queryOracle.result.returnType, 'ok');
     });
 });

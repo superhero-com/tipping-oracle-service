@@ -9,13 +9,13 @@ module.exports = class PageParser {
     this.aeternity = aeternity ? aeternity : new Aeternity();
   }
 
-  async getAddressesFromPage(url) {
+  async getAddressFromPage(expectedAddress, url) {
     const {html} = await DomLoader.getHTMLfromURL(url);
     if (!html) throw Error("html loading failed");
 
     const snippets = this.snippetLoader.getSnippetForURL(url);
 
-    return await snippets.reduce(async (promiseAcc, {domRegex}) => {
+    const addresses = await snippets.reduce(async (promiseAcc, {domRegex}) => {
       const acc = await promiseAcc;
       const matches = html.match(new RegExp(domRegex, "g"));
       const uniqueMatches = [...new Set(matches)];
@@ -24,5 +24,12 @@ module.exports = class PageParser {
 
       return nameResolvedMatches ? acc.concat(nameResolvedMatches) : acc;
     }, []);
+
+    if (addresses.length) {
+      const foundExpectedAddress = addresses.find(address => address === expectedAddress);
+      return foundExpectedAddress ? foundExpectedAddress : addresses[0];
+    } else {
+      return null;
+    }
   }
 };
