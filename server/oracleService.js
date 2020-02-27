@@ -12,7 +12,6 @@ module.exports = class OracleService {
     this.aeternity = new Aeternity();
     await this.aeternity.init(keyPair);
     await this.aeternity.awaitFunding(this.fundingAmount);
-
     this.pageParser = new PageParser(this.aeternity);
 
     console.log("Oracle Client initialized");
@@ -21,14 +20,28 @@ module.exports = class OracleService {
   register = async (queryFee = 20000000000000) => {
     if (!this.aeternity.client) throw "Client not initialized";
 
-    this.oracle = await this.aeternity.client.registerOracle("string", "string", {queryFee: queryFee});
-    console.log("Oracle registered", this.oracle.id);
+    if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(() => null);
+    if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {queryFee: queryFee, oracleTtl: { type: 'delta', value: 500 }});
+
+    this.extendIfNeeded();
+    setInterval(() => {
+      this.extendIfNeeded();
+    }, 100 * 3 * 60 * 1000); // every 100 blocks
+    console.log("Oracle Id", this.oracle.id);
+  };
+
+  extendIfNeeded = async () => {
+    const height = await this.aeternity.client.height();
+
+    if (height > this.oracle.ttl - 100) {
+      this.oracle = await this.oracle.extendOracle({ type: 'delta', value: 500 });
+      console.log("Extended Oracle");
+    }
   };
 
   startPolling = async () => {
     if (!this.aeternity.client) throw "Client not initialized";
 
-    //if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject('ok_fUq2NesPXcYZ1CcqBcGC3StpdnQw3iVxMA3YSeCNAwfN4myQk');
     this.stopPollQueries = await this.oracle.pollQueries(this.respond, {interval: 2000});
     console.log("Oracle Polling started")
   };
