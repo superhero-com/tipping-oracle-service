@@ -8,4 +8,4 @@ script:
   - npm install -g aeproject
   - npm install
   - aeproject env
-  - aeproject test
+  - NODE_ENV=test aeproject test
