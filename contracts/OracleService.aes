@@ -62,12 +62,12 @@ contract OracleService =
   entrypoint estimate_query_fee() : int =
     estimate_query_fee_iterate(0, Map.to_list(state.trusted_oracles))
 
-  // TODO query for specific address
-  payable stateful entrypoint query_oracle(url : string) : oracle_query_tuples =
+  payable stateful entrypoint query_oracle(url : string, expected_account : address) : oracle_query_tuples =
     require(estimate_query_fee() == Call.value, "QUERY_FEE_NOT_MATCHING")
     require_minimum_amount_of_oracles()
+    let query_string = String.concat(Address.to_str(expected_account), String.concat(";", url))
     let query_oracle = (o) => switch(o)
-      (_, oracle) => (oracle, Oracle.query(oracle, url, Oracle.query_fee(oracle), RelativeTTL(20), RelativeTTL(20)))
+      (_, oracle) => (oracle, Oracle.query(oracle, query_string, Oracle.query_fee(oracle), RelativeTTL(20), RelativeTTL(20)))
     let queries = List.map(query_oracle, Map.to_list(state.trusted_oracles))
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
     queries

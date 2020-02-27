@@ -21,7 +21,10 @@ module.exports = class OracleService {
     if (!this.aeternity.client) throw "Client not initialized";
 
     if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(() => null);
-    if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {queryFee: queryFee, oracleTtl: { type: 'delta', value: 500 }});
+    if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {
+      queryFee: queryFee,
+      oracleTtl: {type: 'delta', value: 500}
+    });
 
     this.extendIfNeeded();
     this.extendIfNeededInterval = setInterval(() => {
@@ -34,7 +37,7 @@ module.exports = class OracleService {
     const height = await this.aeternity.client.height();
 
     if (height > this.oracle.ttl - 100) {
-      this.oracle = await this.oracle.extendOracle({ type: 'delta', value: 500 });
+      this.oracle = await this.oracle.extendOracle({type: 'delta', value: 500});
       console.log("Extended Oracle");
     }
   };
@@ -50,12 +53,20 @@ module.exports = class OracleService {
     let query = Array.isArray(queries) ? queries.sort((a, b) => a.ttl - b.ttl)[queries.length - 1] : queries;
     if (!query) return;
 
-    const queryArgument = String(Crypto.decodeBase64Check(query.query.slice(3)));
-    const parseResult = await this.pageParser.getAddressesFromPage(queryArgument);
-    console.log("Oracle Respond: got query", queryArgument);
-    console.log("Oracle Respond: will respond", parseResult[0]);
+    const queryArgument = String(Crypto.decodeBase64Check(query.query.slice(3))).split(";");
+    console.log("Oracle Respond: got query", JSON.stringify(queryArgument));
 
-    await this.oracle.respondToQuery(query.id, parseResult[0], {responseTtl: {type: 'delta', value: 20}});
+    const expectedAddress = queryArgument.shift();
+    const url = queryArgument.join(";");
+    const parseResult = await this.pageParser.getAddressFromPage(expectedAddress, url);
+
+    if (parseResult) {
+      console.log("Oracle Respond: will respond", parseResult);
+      await this.oracle.respondToQuery(query.id, parseResult, {responseTtl: {type: 'delta', value: 20}});
+    } else {
+      console.log("Oracle will not respond, no result found in page")
+    }
+
   };
 
   stopPolling = () => {
