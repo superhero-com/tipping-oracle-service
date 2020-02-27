@@ -83,13 +83,8 @@ describe('Oracle Service Contract', () => {
         await new Promise((resolve) => setTimeout(() => resolve(), 2000));
     });
 
-    it('Oracle Service Contract: Check Oracle Answers', async () => {
-        const oracleAnswers = await contract.methods.check_oracle_answers("http://localhost:3001/sample-site.txt", wallets[0].publicKey);
-        assert.equal(oracleAnswers.decodedResult.length, numberOfOracles);
-    });
-
     it('Oracle Service Contract: Check Claim', async () => {
-        const checkClaim = await contract.methods.check_persist_claim("http://localhost:3001/sample-site.txt", wallets[0].publicKey);
+        const checkClaim = await contract.methods.check_persist_claim("http://localhost:3001/sample-site.txt", wallets[0].publicKey, false);
         assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, account: wallets[0].publicKey});
     });
 

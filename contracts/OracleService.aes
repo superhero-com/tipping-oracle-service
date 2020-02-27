@@ -59,9 +59,6 @@ contract OracleService =
     require_owner()
     put(state{ minimum_amount_of_oracles = minimum_amount_of_oracles })
 
-  entrypoint estimate_query_fee() : int =
-    estimate_query_fee_iterate(0, Map.to_list(state.trusted_oracles))
-
   payable stateful entrypoint query_oracle(url : string, expected_account : address) : oracle_query_tuples =
     require(estimate_query_fee() == Call.value, "QUERY_FEE_NOT_MATCHING")
     require_minimum_amount_of_oracles()
@@ -72,14 +69,23 @@ contract OracleService =
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
     queries
 
-  stateful entrypoint check_persist_claim(url : string, account : address) : success_claim =
+  stateful entrypoint check_persist_claim(url : string, account : address, recheck : bool) : success_claim =
     let success_claim = state.success_claimed_urls[url = { success = false, account = account, percentage = 0 }]
-    if(success_claim.success)
+    if(success_claim.success && !recheck)
       success_claim
     else
       let checked_claim = check_claim(url, account)
       put(state{ success_claimed_urls[url] = checked_claim })
       checked_claim
+
+  // GETTER FUNCTIONS
+
+  entrypoint get_state() = state
+
+  entrypoint estimate_query_fee() : int =
+    estimate_query_fee_iterate(0, Map.to_list(state.trusted_oracles))
+
+  // INTERNAL FUNCTIONS
 
   stateful function check_claim(url : string, account : address) : success_claim =
     let oracle_answers = check_oracle_answers(url, account)
@@ -93,13 +99,11 @@ contract OracleService =
     if(success) put(state{ oracle_queries = Map.delete(url, state.oracle_queries) }) else ()
     { success = success, account = account, percentage = percentage }
 
-  entrypoint check_oracle_answers(url : string, account : address) : list(option(bool)) =
+  function check_oracle_answers(url : string, account : address) : list(option(bool)) =
     let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))
       Some(response) => Some(response == Address.to_str(account))
       None => None
     [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url] ]
-
-  entrypoint get_state() = state
 
   function
     estimate_query_fee_iterate : (int, list((int * oracle_type))) => int
