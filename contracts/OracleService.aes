@@ -90,6 +90,7 @@ contract OracleService =
   stateful function check_claim(url : string, account : address) : success_claim =
     let oracle_answers = check_oracle_answers(url, account)
     let answers_length = List.length(oracle_answers)
+    require(answers_length >= state.minimum_amount_of_oracles, "MORE_ORACLE_ANSWERS_REQUIRED")
     let is_positive = (answer) => switch(answer)
       Some(response) => response
       None => false
