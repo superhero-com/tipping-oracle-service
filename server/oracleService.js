@@ -5,7 +5,7 @@ const PageParser = require("./pageParser");
 module.exports = class OracleService {
 
   constructor() {
-    this.fundingAmount = 50000000000000;
+    this.fundingAmount = 10000000000000000;
   }
 
   init = async (keyPair = null) => {
