@@ -26,11 +26,11 @@ const config = {
     compilerUrl: 'http://localhost:3080'
 };
 
-const initializeOracleService = async (client) => {
+const initializeOracleService = async (i, client) => {
     const keyPair = Crypto.generateKeyPair();
     await client.spend(10000000000000000, keyPair.publicKey);
     const oracleService = new Oracle();
-    await oracleService.init(keyPair);
+    await oracleService.init(keyPair, i === 1 ? 5 : 500);
     await oracleService.register();
     await oracleService.startPolling();
     return oracleService;
@@ -51,7 +51,8 @@ describe('Oracle Service Contract', () => {
             compilerUrl: config.compilerUrl
         });
 
-        oracleServices = await util.range(1, numberOfOracles).asyncMap(() => initializeOracleService(client));
+        // start required oracles plus one
+        oracleServices = await util.range(1, numberOfOracles).asyncMap((i) => initializeOracleService(i, client));
     });
 
     after(async () => {
@@ -71,9 +72,13 @@ describe('Oracle Service Contract', () => {
         });
     });
 
+    it('Oracle Service: Await Expiry of first Oracle', async () => {
+        await client.awaitHeight(await client.height() + 5);
+    });
+
     it('Oracle Service Contract: Estimate Query Fee', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
-        assert.equal(queryFee.decodedResult, 20000000000000 * numberOfOracles);
+        assert.equal(queryFee.decodedResult, 20000000000000 * (numberOfOracles - 1));
     });
 
     it('Oracle Service Contract: Query Oracle', async () => {
@@ -101,7 +106,7 @@ describe('Oracle Service Contract', () => {
     });
 
     it('Oracle Service Contract: Delete Oracle', async () => {
-        const deleteOracle = await contract.methods.set_minimum_amount_of_oracles(2);
+        const deleteOracle = await contract.methods.set_minimum_amount_of_oracles(numberOfOracles - 2);
         assert.equal(deleteOracle.result.returnType, 'ok');
 
         const queryFee = await contract.methods.estimate_query_fee();

@@ -6,9 +6,11 @@ module.exports = class OracleService {
 
   constructor() {
     this.fundingAmount = 10000000000000000;
+    this.ttl = 500;
   }
 
-  init = async (keyPair = null) => {
+  init = async (keyPair = null, ttl = 500) => {
+    this.ttl = ttl;
     this.aeternity = new Aeternity();
     await this.aeternity.init(keyPair);
     await this.aeternity.awaitFunding(this.fundingAmount);
@@ -23,7 +25,7 @@ module.exports = class OracleService {
     if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(() => null);
     if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {
       queryFee: queryFee,
-      oracleTtl: {type: 'delta', value: 500}
+      oracleTtl: {type: 'delta', value: this.ttl}
     });
 
     this.extendIfNeeded();
@@ -37,7 +39,7 @@ module.exports = class OracleService {
     const height = await this.aeternity.client.height();
 
     if (height > this.oracle.ttl - 100) {
-      this.oracle = await this.oracle.extendOracle({type: 'delta', value: 500});
+      this.oracle = await this.oracle.extendOracle({type: 'delta', value: this.ttl});
       console.log("Extended Oracle");
     }
   };

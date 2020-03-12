@@ -110,7 +110,11 @@ contract OracleService =
     estimate_query_fee_iterate : (int, list((int * oracle_type))) => int
     estimate_query_fee_iterate(fee_acc, [])      = fee_acc
     estimate_query_fee_iterate(fee_acc, o :: os) = switch(o)
-      (_, oracle) => estimate_query_fee_iterate(fee_acc + Oracle.query_fee(oracle), os)
+      (_, oracle) =>
+        let oracle_fee = if(check_oracle(oracle)) Oracle.query_fee(oracle) else 0
+        estimate_query_fee_iterate(fee_acc + oracle_fee, os)
+
+  function check_oracle(o : oracle_type) : bool = Oracle.check(o)
 
   function require_minimum_amount_of_oracles() =
     require(Map.size(state.trusted_oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_REQUIRED")
