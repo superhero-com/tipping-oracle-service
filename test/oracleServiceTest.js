@@ -28,7 +28,7 @@ const config = {
 
 const initializeOracleService = async (client) => {
     const keyPair = Crypto.generateKeyPair();
-    await client.spend(50000000000000, keyPair.publicKey);
+    await client.spend(10000000000000000, keyPair.publicKey);
     const oracleService = new Oracle();
     await oracleService.init(keyPair);
     await oracleService.register();
