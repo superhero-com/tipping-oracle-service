@@ -26,19 +26,10 @@ const config = {
     compilerUrl: 'http://localhost:3080'
 };
 
-const initializeOracleService = async (i, client) => {
-    const keyPair = Crypto.generateKeyPair();
-    await client.spend(10000000000000000, keyPair.publicKey);
-    const oracleService = new Oracle();
-    await oracleService.init(keyPair, i === 1 ? 5 : 500);
-    await oracleService.register();
-    await oracleService.startPolling();
-    return oracleService;
-};
-
 describe('Oracle Service Contract', () => {
     let contract, oracleServices;
     let numberOfOracles = 3;
+    let firstOracleTtl = 6;
 
     before(async () => {
         client = await Universal({
@@ -50,6 +41,16 @@ describe('Oracle Service Contract', () => {
             networkId: 'ae_devnet',
             compilerUrl: config.compilerUrl
         });
+
+        const initializeOracleService = async (i, client) => {
+            const keyPair = Crypto.generateKeyPair();
+            await client.spend(10000000000000000, keyPair.publicKey);
+            const oracleService = new Oracle();
+            await oracleService.init(keyPair, i === 1 ? firstOracleTtl : 500);
+            await oracleService.register();
+            await oracleService.startPolling();
+            return oracleService;
+        };
 
         // start required oracles plus one
         oracleServices = await util.range(1, numberOfOracles).asyncMap((i) => initializeOracleService(i, client));
@@ -73,7 +74,7 @@ describe('Oracle Service Contract', () => {
     });
 
     it('Oracle Service: Await Expiry of first Oracle', async () => {
-        await client.awaitHeight(await client.height() + 5);
+        await client.awaitHeight(await client.height() + 1 + firstOracleTtl);
     });
 
     it('Oracle Service Contract: Estimate Query Fee', async () => {
@@ -83,6 +84,7 @@ describe('Oracle Service Contract', () => {
 
     it('Oracle Service Contract: Query Oracle', async () => {
         const queryFee = await contract.methods.estimate_query_fee();
+        await contract.methods.query_oracle(["http://localhost:3001/sample-site.txt", wallets[0].publicKey], {amount: queryFee.decodedResult});
         const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", wallets[0].publicKey, {amount: queryFee.decodedResult});
         assert.equal(queryOracle.result.returnType, 'ok');
         await new Promise((resolve) => setTimeout(() => resolve(), 2000));
