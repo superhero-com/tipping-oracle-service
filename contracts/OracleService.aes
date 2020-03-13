@@ -62,11 +62,9 @@ contract OracleService =
   payable stateful entrypoint query_oracle(url : string, expected_account : address) =
     let query_fee = estimate_query_fee()
     require(query_fee == Call.value, String.concat("QUERY_FEE_NOT_MATCHING_", Int.to_str(query_fee)))
-    require_minimum_amount_of_oracles()
     let query_string = String.concat(Address.to_str(expected_account), String.concat(";", url))
-    let query_oracle = (o) => switch(o)
-      (_, oracle) => (oracle, Oracle.query(oracle, query_string, Oracle.query_fee(oracle), RelativeTTL(20), RelativeTTL(20)))
-    let queries = List.map(query_oracle, Map.to_list(state.trusted_oracles))
+    let query_oracle = (oracle) => (oracle, Oracle.query(oracle, query_string, Oracle.query_fee(oracle), RelativeTTL(20), RelativeTTL(20)))
+    let queries = List.map(query_oracle, checked_oracles())
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
 
   stateful entrypoint check_persist_claim(url : string, account : address, recheck : bool) : success_claim =
@@ -83,7 +81,7 @@ contract OracleService =
   entrypoint get_state() = state
 
   entrypoint estimate_query_fee() : int =
-    estimate_query_fee_iterate(0, Map.to_list(state.trusted_oracles))
+    estimate_query_fee_iterate(0, checked_oracles())
 
   // INTERNAL FUNCTIONS
 
@@ -104,20 +102,19 @@ contract OracleService =
     let check_query = (oracle, query) => switch(Oracle.get_answer(oracle, query))
       Some(response) => Some(response == Address.to_str(account))
       None => None
-    [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url] ]
+    [ check_query(oracle, query) | (oracle, query) <- state.oracle_queries[url], if (check_oracle(oracle)) ]
 
   function
-    estimate_query_fee_iterate : (int, list((int * oracle_type))) => int
+    estimate_query_fee_iterate : (int, list(oracle_type)) => int
     estimate_query_fee_iterate(fee_acc, [])      = fee_acc
-    estimate_query_fee_iterate(fee_acc, o :: os) = switch(o)
-      (_, oracle) =>
-        let oracle_fee = if(check_oracle(oracle)) Oracle.query_fee(oracle) else 0
-        estimate_query_fee_iterate(fee_acc + oracle_fee, os)
+    estimate_query_fee_iterate(fee_acc, o :: os) = estimate_query_fee_iterate(fee_acc + Oracle.query_fee(o), os)
 
   function check_oracle(o : oracle_type) : bool = Oracle.check(o)
 
-  function require_minimum_amount_of_oracles() =
-    require(Map.size(state.trusted_oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_REQUIRED")
+  function checked_oracles() : list(oracle_type) =
+    let oracles = [ oracle | (_, oracle) <- Map.to_list(state.trusted_oracles), if (check_oracle(oracle)) ]
+    require(List.length(oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_REQUIRED")
+    oracles
 
   function require_owner() =
     require(Call.caller == state.owner, "OWNER_REQUIRED")
