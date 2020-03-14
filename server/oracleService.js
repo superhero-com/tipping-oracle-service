@@ -7,16 +7,18 @@ module.exports = class OracleService {
   constructor() {
     this.fundingAmount = 10000000000000000;
     this.ttl = 500;
+    this.autoExtend = true;
   }
 
-  init = async (keyPair = null, ttl = 500) => {
+  init = async (keyPair = null, ttl = 500, autoExtend = true) => {
     this.ttl = ttl;
+    this.autoExtend = autoExtend;
     this.aeternity = new Aeternity();
     await this.aeternity.init(keyPair);
     await this.aeternity.awaitFunding(this.fundingAmount);
     this.pageParser = new PageParser(this.aeternity);
 
-    console.log("Oracle Client initialized");
+    console.log("Oracle Client initialized ttl:", this.ttl, "auto extend:", this.autoExtend);
   };
 
   register = async (queryFee = 20000000000000) => {
@@ -28,19 +30,21 @@ module.exports = class OracleService {
       oracleTtl: {type: 'delta', value: this.ttl}
     });
 
-    this.extendIfNeeded();
-    this.extendIfNeededInterval = setInterval(() => {
+    if (this.autoExtend) {
       this.extendIfNeeded();
-    }, 100 * 3 * 60 * 1000); // every 100 blocks
+      this.extendIfNeededInterval = setInterval(() => {
+        this.extendIfNeeded();
+      }, (this.ttl / 5) * 3 * 60 * 1000); // every ttl/5 blocks
+    }
     console.log("Oracle Id", this.oracle.id);
   };
 
   extendIfNeeded = async () => {
     const height = await this.aeternity.client.height();
 
-    if (height > this.oracle.ttl - 100) {
+    if (height > this.oracle.ttl - this.ttl / 5) {
       this.oracle = await this.oracle.extendOracle({type: 'delta', value: this.ttl});
-      console.log("Extended Oracle");
+      console.log("Extended Oracle at height:", height, "new ttl:", this.oracle.ttl);
     }
   };
 
