@@ -48,7 +48,7 @@ module.exports = class Aeternity {
   awaitFunding = async (fundingAmount) => {
     if (!this.client) throw "Client not initialized";
 
-    if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isLessThan(fundingAmount)) {
+    if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isLessThan(new BigNumber(fundingAmount).dividedBy(2))) {
       qrcode.generate(this.keypair.publicKey, {small: true});
       console.log("Fund Oracle Service Wallet", this.keypair.publicKey, util.atomsToAe(fundingAmount).toFixed(), "AE");
       await new Promise(resolve => {
