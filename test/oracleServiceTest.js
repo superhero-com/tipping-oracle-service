@@ -29,7 +29,7 @@ const config = {
 describe('Oracle Service Contract', () => {
     let contract, oracleServices;
     let numberOfOracles = 4;
-    let firstOracleTtl = 6;
+    let firstOracleTtl = 15;
 
     before(async () => {
         client = await Universal({
@@ -46,7 +46,7 @@ describe('Oracle Service Contract', () => {
             const keyPair = Crypto.generateKeyPair();
             await client.spend(10000000000000000, keyPair.publicKey);
             const oracleService = new Oracle();
-            await oracleService.init(keyPair, i === 1 ? firstOracleTtl : 500);
+            await oracleService.init(keyPair, i === numberOfOracles ? firstOracleTtl : 500, i !== numberOfOracles);
             await oracleService.register();
             await oracleService.startPolling();
             return oracleService;
@@ -74,7 +74,7 @@ describe('Oracle Service Contract', () => {
     });
 
     it('Oracle Service: Await Expiry of first Oracle', async () => {
-        await client.awaitHeight(await client.height() + 1 + firstOracleTtl);
+        await client.awaitHeight(oracleServices[oracleServices.length -1].oracle.ttl + 1);
     });
 
     it('Oracle Service Contract: Estimate Query Fee', async () => {
