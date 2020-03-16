@@ -46,6 +46,7 @@ contract OracleService =
       success_claimed_urls = {},
       owner = owner }
 
+  // TODO: fix Map.size not working as id if allow deletion
   stateful entrypoint add_oracle(oracle : oracle_type) =
     require_owner()
     require(Oracle.check(oracle), "ORACLE_CHECK_FAILED")
