@@ -34,6 +34,7 @@ contract OracleService =
 
   record state =
     { trusted_oracles : map(int, oracle_type)
+    , trusted_oracle_seq : int
     , oracle_queries : map(string, oracle_query_tuples)
     , minimum_amount_of_oracles : int
     , success_claimed_urls : map(string, success_claim)
@@ -41,16 +42,17 @@ contract OracleService =
 
   entrypoint init(minimum_amount_of_oracles : int, owner : address) =
     { trusted_oracles = {},
+      trusted_oracle_seq = 0,
       oracle_queries = {},
       minimum_amount_of_oracles = minimum_amount_of_oracles,
       success_claimed_urls = {},
       owner = owner }
 
-  // TODO: fix Map.size not working as id if allow deletion
   stateful entrypoint add_oracle(oracle : oracle_type) =
     require_owner()
     require(Oracle.check(oracle), "ORACLE_CHECK_FAILED")
-    put(state{ trusted_oracles[Map.size(state.trusted_oracles)] = oracle })
+    let next_seq = state.trusted_oracle_seq + 1
+    put(state{ trusted_oracles[next_seq] = oracle, trusted_oracle_seq = next_seq })
 
   stateful entrypoint remove_oracle(id : int) =
     require_owner()
