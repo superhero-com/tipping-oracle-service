@@ -1,3 +1,2 @@
 #extracted url will be named capture group 'url', executed before snippets
-(?<url>https://twitter.com/[a-zA-Z0-9_]+/)
-(?<url>https://github.com/[a-zA-Z0-9_]+/)
+(?<url>https:\/\/twitter.com\/[a-zA-Z0-9_]+\/)
