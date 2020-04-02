@@ -11,14 +11,16 @@ module.exports = class PageParser {
 
   async getAddressFromPage(expectedAddress, url) {
     const extractedUrl = this.snippetLoader.getExtractionForUrl(url);
-    const {html} = await DomLoader.getHTMLfromURL(extractedUrl);
-    if (!html) throw Error("html loading failed");
+    const selector = '[data-testid="UserDescription"]';
+    const {result} = await DomLoader.getHTMLfromURL(extractedUrl, selector);
+    if (!result) throw Error("html/selector result loading failed");
 
+    console.log(result);
     const snippets = this.snippetLoader.getSnippetForURL(extractedUrl);
 
     const addresses = await snippets.reduce(async (promiseAcc, {domRegex}) => {
       const acc = await promiseAcc;
-      const matches = html.match(new RegExp(domRegex, "g"));
+      const matches = result.match(new RegExp(domRegex, "g"));
       const uniqueMatches = [...new Set(matches)];
 
       const nameResolvedMatches = matches && domRegex.includes('\.chain') ? await this.aeternity.getAddressFromChainName(uniqueMatches) : uniqueMatches;
