@@ -3,13 +3,13 @@ const puppeteer = require('puppeteer');
 
 module.exports = class DomLoader {
 
-  static async getHTMLfromURL(url) {
-    let result = await DomLoader.runBrowser(url);
-    if (result.error) result = await DomLoader.runBrowser(url);
+  static async getHTMLfromURL(url, selector) {
+    let result = await DomLoader.runBrowser(url, selector);
+    if (result.error) result = await DomLoader.runBrowser(url, selector);
     return result;
   }
 
-  static async runBrowser(url) {
+  static async runBrowser(url, selector) {
     const browser = await puppeteer.launch(process.env.NODE_ENV === 'test' ? {} : {
       executablePath: '/usr/bin/chromium-browser',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
@@ -33,8 +33,11 @@ module.exports = class DomLoader {
         throw new Error('Got caught on login.php')
       }
       const html = await page.content();
+
+      let selected = selector ? await page.$eval(selector, e => e.innerText) : null;
+
       await browser.close();
-      return {html, url: page.url()};
+      return {result: selected ? selected : html, url: page.url()};
     } catch (e) {
       console.error(`Error while crawling ${url}: ${e.message}`);
       await browser.close();
