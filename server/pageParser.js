@@ -11,16 +11,16 @@ module.exports = class PageParser {
 
   async getAddressFromPage(expectedAddress, originalUrl) {
     let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
-    const matchedWithDomSelector = await this.matchAddress(expectedAddress, result, snippets);
+    const matched = await this.matchAddress(expectedAddress, result, snippets);
 
-    if (matchedWithDomSelector) {
-      console.log("matchedWithDomSelector", originalUrl, matchedWithDomSelector);
-      return matchedWithDomSelector;
+    if (matched) {
+      console.log("matched", originalUrl, matched);
+      return matched;
     } else {
       let {result, snippets} = await this.getResultAndSnippet(originalUrl);
-      const matchedOriginal = await this.matchAddress(expectedAddress, result, snippets);
-      console.log("matchedOriginal", originalUrl, matchedOriginal);
-      return matchedOriginal;
+      const fallbackOriginal = await this.matchAddress(expectedAddress, result, snippets);
+      console.log("fallbackOriginal", originalUrl, fallbackOriginal);
+      return fallbackOriginal;
     }
   }
 
@@ -34,6 +34,7 @@ module.exports = class PageParser {
 
   async getResultAndSnippetDomSelector(originalUrl){
     const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
+    if(url !== originalUrl) console.log("extractionForUrl", originalUrl, url);
     const {result} = await DomLoader.getHTMLfromURL(url, domSelector);
     if (!result) throw Error("selector result loading failed");
 
