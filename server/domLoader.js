@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 
 module.exports = class DomLoader {
 
-  static async getHTMLfromURL(url, selector) {
+  static async getHTMLfromURL(url, selector = null) {
     let result = await DomLoader.runBrowser(url, selector);
     if (result.error) result = await DomLoader.runBrowser(url, selector);
     return result;
