@@ -10,8 +10,13 @@ module.exports = class PageParser {
   }
 
   async getAddressFromPage(expectedAddress, originalUrl) {
-    let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
-    const matched = await this.matchAddress(expectedAddress, result, snippets);
+    let matched;
+    try {
+      let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
+      matched = await this.matchAddress(expectedAddress, result, snippets);
+    } catch (e) {
+      console.error("fallbackOriginal:", e);
+    }
 
     if (matched) {
       console.log("matched", originalUrl, matched);
