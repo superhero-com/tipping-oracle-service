@@ -17,17 +17,24 @@ module.exports = class SnippetLoader {
       row = row.trim();
       if (row.startsWith("#")) return null;
       if (row.length === 0) return null;
-      return row;
+      const splitRow = row.split(' ');
+      return {
+        urlRegex: splitRow.shift(),
+        domSelector: splitRow.join(' ')
+      }
     }).filter(entry => !!entry)
   }
 
   getExtractionForUrl(url) {
-    const extractor = this.extractors.find(extractor => url.match(extractor));
-    if (!extractor) return url;
+    const extractor = this.extractors.find(({urlRegex}) => url.match(urlRegex));
+    if (!extractor) return {url, domSelector: null};
 
-    const matchedUrl = url.match(extractor);
-    if (matchedUrl.groups && matchedUrl.groups.url) return matchedUrl.groups.url;
-    else return url;
+    const matchedUrl = url.match(extractor.urlRegex);
+    if (matchedUrl.groups && matchedUrl.groups.url) return {
+      url: matchedUrl.groups.url,
+      domSelector: extractor.domSelector
+    };
+    else return {url, domSelector: null};
   }
 
   parseSnippetFile(rawData) {

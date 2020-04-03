@@ -9,14 +9,12 @@ module.exports = class PageParser {
     this.aeternity = aeternity ? aeternity : new Aeternity();
   }
 
-  async getAddressFromPage(expectedAddress, url) {
-    const extractedUrl = this.snippetLoader.getExtractionForUrl(url);
-    const selector = '[data-testid="UserDescription"]';
-    const {result} = await DomLoader.getHTMLfromURL(extractedUrl, selector);
+  async getAddressFromPage(expectedAddress, originalUrl) {
+    const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
+    const {result} = await DomLoader.getHTMLfromURL(url, domSelector);
     if (!result) throw Error("html/selector result loading failed");
 
-    console.log(result);
-    const snippets = this.snippetLoader.getSnippetForURL(extractedUrl);
+    const snippets = this.snippetLoader.getSnippetForURL(url);
 
     const addresses = await snippets.reduce(async (promiseAcc, {domRegex}) => {
       const acc = await promiseAcc;
