@@ -1,2 +1,2 @@
-#1. extract url will be named capture group 'url', 2. dom selector for extracted page, executed before snippets
+#1. extract url will be named capture group 'url', 2. dom selector for extracted page, executed before snippets, fallback to snippets if no result
 (?<url>https:\/\/twitter.com\/[a-zA-Z0-9_]+\/) [data-testid="UserDescription"]

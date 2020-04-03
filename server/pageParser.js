@@ -10,12 +10,38 @@ module.exports = class PageParser {
   }
 
   async getAddressFromPage(expectedAddress, originalUrl) {
-    const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
-    const {result} = await DomLoader.getHTMLfromURL(url, domSelector);
-    if (!result) throw Error("html/selector result loading failed");
+    let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
+    const matchedWithDomSelector = await this.matchAddress(expectedAddress, result, snippets);
+
+    if (matchedWithDomSelector) {
+      console.log("matchedWithDomSelector", originalUrl, matchedWithDomSelector);
+      return matchedWithDomSelector;
+    } else {
+      let {result, snippets} = await this.getResultAndSnippet(originalUrl);
+      const matchedOriginal = await this.matchAddress(expectedAddress, result, snippets);
+      console.log("matchedOriginal", originalUrl, matchedOriginal);
+      return matchedOriginal;
+    }
+  }
+
+  async getResultAndSnippet(url){
+    const {result} = await DomLoader.getHTMLfromURL(url);
+    if (!result) throw Error("html result loading failed");
 
     const snippets = this.snippetLoader.getSnippetForURL(url);
+    return {result, snippets}
+  }
 
+  async getResultAndSnippetDomSelector(originalUrl){
+    const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
+    const {result} = await DomLoader.getHTMLfromURL(url, domSelector);
+    if (!result) throw Error("selector result loading failed");
+
+    const snippets = this.snippetLoader.getSnippetForURL(url);
+    return {result, snippets}
+  }
+
+  async matchAddress(expectedAddress, result, snippets) {
     const addresses = await snippets.reduce(async (promiseAcc, {domRegex}) => {
       const acc = await promiseAcc;
       const matches = result.match(new RegExp(domRegex, "g"));
