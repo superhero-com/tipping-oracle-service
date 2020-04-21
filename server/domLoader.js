@@ -18,6 +18,11 @@ module.exports = class DomLoader {
       const page = await browser.newPage();
       await page.goto(url, {
         waitUntil: 'networkidle2',
+      }).catch(e => {
+        console.log("trying wait until load after:", e.message);
+        return page.goto(url, {
+          waitUntil: 'load',
+        })
       });
       if (
         (new URL(url)).hostname === 'www.weibo.com' &&
