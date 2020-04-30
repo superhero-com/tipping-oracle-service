@@ -1,7 +1,8 @@
 const {Crypto} = require('@aeternity/aepp-sdk');
 const Aeternity = require("./aeternity");
 const PageParser = require("./pageParser");
-const logger = require("./logger")(module);
+const loggerF = require("./logger");
+const logger = loggerF(module);
 
 module.exports = class OracleService {
 
@@ -30,21 +31,25 @@ module.exports = class OracleService {
       oracleTtl: {type: 'delta', value: this.ttl}
     });
 
+    logger.info("oracle id", this.oracle.id);
+
     if (this.autoExtend) {
       this.extendIfNeeded();
       this.extendIfNeededInterval = setInterval(() => {
         this.extendIfNeeded();
       }, (this.ttl / 5) * 3 * 60 * 1000); // every ttl/5 blocks
     }
-    logger.info("oracle id", this.oracle.id);
   };
 
   extendIfNeeded = async () => {
+    logger.debug("checking to extend oracle");
     const height = await this.aeternity.client.height();
 
     if (height > this.oracle.ttl - this.ttl / 5) {
       this.oracle = await this.oracle.extendOracle({type: 'delta', value: this.ttl});
       logger.debug("extended oracle at height:", height, "new ttl:", this.oracle.ttl);
+    } else {
+      logger.debug("no need to extend oracle at height:", height, "ttl:", this.oracle.ttl);
     }
   };
 
@@ -57,9 +62,9 @@ module.exports = class OracleService {
 
   respond = async (queries) => {
     let query = Array.isArray(queries) ? queries.sort((a, b) => a.ttl - b.ttl)[queries.length - 1] : queries;
-    if (!query) return;
+    if (!query || query.response !== "or_Xfbg4g==") return; //return early on no or non-empty response;
 
-    const responseLogger = require("./logger")(module, query.id);
+    const responseLogger = loggerF(module, query.id);
 
     const queryString = String(Crypto.decodeBase64Check(query.query.slice(3)));
     const queryArgument = queryString.split(";");

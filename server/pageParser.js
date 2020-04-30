@@ -18,7 +18,7 @@ module.exports = class PageParser {
       let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
       matched = await this.matchAddress(expectedAddress, result, snippets);
     } catch (e) {
-      logger.warn("parse with dom selector", e.message);
+      logger.warn("parse error with dom selector", e.message);
     }
 
     if (matched) {
@@ -26,9 +26,15 @@ module.exports = class PageParser {
       return matched;
     } else {
       logger.info("trying fallback to original url", originalUrl);
-      let {result, snippets} = await this.getResultAndSnippet(originalUrl);
-      return this.matchAddress(expectedAddress, result, snippets);
+      try {
+        let {result, snippets} = await this.getResultAndSnippet(originalUrl);
+        return this.matchAddress(expectedAddress, result, snippets);
+      } catch (e) {
+        logger.warn("parse error", e.message);
+      }
     }
+
+    return null;
   }
 
   async getResultAndSnippet(url){
