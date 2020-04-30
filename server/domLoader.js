@@ -1,16 +1,20 @@
 // load dom from url
 const puppeteer = require('puppeteer');
-const logger = require("./logger")(module);
+let logger = require("./logger")(module);
 
 module.exports = class DomLoader {
 
-  static async getHTMLfromURL(url, selector = null) {
-    let result = await DomLoader.runBrowser(url, selector);
-    if (result.error) result = await DomLoader.runBrowser(url, selector);
+  constructor(contextInfo) {
+    if (contextInfo) logger = require("./logger")(module, contextInfo);
+  }
+
+  async getHTMLfromURL(url, selector = null) {
+    let result = await this.runBrowser(url, selector);
+    if (result.error) result = await this.runBrowser(url, selector);
     return result;
   }
 
-  static async runBrowser(url, selector) {
+  async runBrowser(url, selector) {
     const browser = await puppeteer.launch(process.env.NODE_ENV === 'test' ? {} : {
       executablePath: '/usr/bin/chromium-browser',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
