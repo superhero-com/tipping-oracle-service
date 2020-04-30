@@ -1,6 +1,7 @@
 const {Crypto} = require('@aeternity/aepp-sdk');
 const Aeternity = require("./aeternity");
 const PageParser = require("./pageParser");
+const logger = require("./logger")(module);
 
 module.exports = class OracleService {
 
@@ -18,7 +19,7 @@ module.exports = class OracleService {
     await this.aeternity.awaitFunding(this.fundingAmount);
     this.pageParser = new PageParser(this.aeternity);
 
-    console.log("Oracle Client initialized ttl:", this.ttl, "auto extend:", this.autoExtend);
+    logger.info("Oracle Client initialized ttl:", this.ttl, "auto extend:", this.autoExtend);
   };
 
   register = async (queryFee = 20000000000000) => {
@@ -36,7 +37,7 @@ module.exports = class OracleService {
         this.extendIfNeeded();
       }, (this.ttl / 5) * 3 * 60 * 1000); // every ttl/5 blocks
     }
-    console.log("Oracle Id", this.oracle.id);
+    logger.info("Oracle Id", this.oracle.id);
   };
 
   extendIfNeeded = async () => {
@@ -44,7 +45,7 @@ module.exports = class OracleService {
 
     if (height > this.oracle.ttl - this.ttl / 5) {
       this.oracle = await this.oracle.extendOracle({type: 'delta', value: this.ttl});
-      console.log("Extended Oracle at height:", height, "new ttl:", this.oracle.ttl);
+      logger.info("Extended Oracle at height:", height, "new ttl:", this.oracle.ttl);
     }
   };
 
@@ -52,7 +53,7 @@ module.exports = class OracleService {
     if (!this.aeternity.client) throw "Client not initialized";
 
     this.stopPollQueries = await this.oracle.pollQueries(this.respond, {interval: 2000});
-    console.log("Oracle Polling started")
+    logger.info("Oracle Polling started")
   };
 
   respond = async (queries) => {
@@ -60,17 +61,17 @@ module.exports = class OracleService {
     if (!query) return;
 
     const queryArgument = String(Crypto.decodeBase64Check(query.query.slice(3))).split(";");
-    console.log("Oracle Respond: got query", JSON.stringify(queryArgument));
+    logger.info("Oracle Respond: got query", JSON.stringify(queryArgument));
 
     const expectedAddress = queryArgument.shift();
     const url = queryArgument.join(";");
     const parseResult = await this.pageParser.getAddressFromPage(expectedAddress, url);
 
     if (parseResult) {
-      console.log("Oracle Respond: will respond", parseResult);
+      logger.info("Oracle Respond: will respond", parseResult);
       await this.oracle.respondToQuery(query.id, parseResult, {responseTtl: {type: 'delta', value: 20}});
     } else {
-      console.log("Oracle will not respond, no result found in page")
+      logger.info("Oracle will not respond, no result found in page")
     }
 
   };
@@ -78,7 +79,7 @@ module.exports = class OracleService {
   stopPolling = () => {
     if (this.stopPollQueries) this.stopPollQueries();
     if (this.extendIfNeededInterval) clearInterval(this.extendIfNeededInterval);
-    console.log("Oracle Polling stopped");
+    logger.info("Oracle Polling stopped");
   };
 };
 

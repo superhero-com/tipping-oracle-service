@@ -1,6 +1,7 @@
 const SnippetLoader = require('./snippetLoader');
 const DomLoader = require("./domLoader");
 const Aeternity = require("./aeternity");
+const logger = require("./logger")(module);
 
 module.exports = class PageParser {
 
@@ -15,16 +16,16 @@ module.exports = class PageParser {
       let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
       matched = await this.matchAddress(expectedAddress, result, snippets);
     } catch (e) {
-      console.error("fallbackOriginal:", e);
+      logger.error("fallbackOriginal:", e);
     }
 
     if (matched) {
-      console.log("matched", originalUrl, matched);
+      logger.info("matched", originalUrl, matched);
       return matched;
     } else {
       let {result, snippets} = await this.getResultAndSnippet(originalUrl);
       const fallbackOriginal = await this.matchAddress(expectedAddress, result, snippets);
-      console.log("fallbackOriginal", originalUrl, fallbackOriginal);
+      logger.info("fallbackOriginal", originalUrl, fallbackOriginal);
       return fallbackOriginal;
     }
   }
@@ -39,7 +40,7 @@ module.exports = class PageParser {
 
   async getResultAndSnippetDomSelector(originalUrl){
     const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
-    if(url !== originalUrl) console.log("extractionForUrl", originalUrl, url);
+    if(url !== originalUrl) logger.info("extractionForUrl", originalUrl, url);
     const {result} = await DomLoader.getHTMLfromURL(url, domSelector);
     if (!result) throw Error("selector result loading failed");
 

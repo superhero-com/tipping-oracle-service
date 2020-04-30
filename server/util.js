@@ -1,5 +1,6 @@
 const BigNumber = require("bignumber.js");
 const util = {};
+const logger = require("./logger")(module);
 
 util.range = (start, end) => (new Array(end - start + 1)).fill(undefined).map((_, i) => i + start);
 
@@ -7,7 +8,7 @@ Array.prototype.asyncMap = async function (asyncF) {
     return this.reduce(async (promiseAcc, cur) => {
         const acc = await promiseAcc;
         const res = await asyncF(cur).catch(e => {
-            console.error("asyncMap asyncF", e.message);
+            logger.error("asyncMap asyncF", e.message);
             return null;
         });
         if (Array.isArray(res)) {
