@@ -16,36 +16,37 @@ module.exports = class PageParser {
       let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
       matched = await this.matchAddress(expectedAddress, result, snippets);
     } catch (e) {
-      logger.error("fallbackOriginal:", e);
+      logger.warn("parse with dom selector", e.message);
     }
 
     if (matched) {
       logger.info("matched", originalUrl, matched);
       return matched;
     } else {
+      logger.info("trying fallback to original url", originalUrl);
       let {result, snippets} = await this.getResultAndSnippet(originalUrl);
       const fallbackOriginal = await this.matchAddress(expectedAddress, result, snippets);
-      logger.info("fallbackOriginal", originalUrl, fallbackOriginal);
+      if(!fallbackOriginal) logger.warn("no result found", originalUrl);
       return fallbackOriginal;
     }
   }
 
   async getResultAndSnippet(url){
-    const {result} = await DomLoader.getHTMLfromURL(url);
-    if (!result) throw Error("html result loading failed");
+    const result = await DomLoader.getHTMLfromURL(url);
+    if (result.error) throw Error(result.error);
 
     const snippets = this.snippetLoader.getSnippetForURL(url);
-    return {result, snippets}
+    return {result: result.result, snippets}
   }
 
   async getResultAndSnippetDomSelector(originalUrl){
     const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
-    if(url !== originalUrl) logger.info("extractionForUrl", originalUrl, url);
-    const {result} = await DomLoader.getHTMLfromURL(url, domSelector);
-    if (!result) throw Error("selector result loading failed");
+    if(url !== originalUrl) logger.info("use extracted url", originalUrl, url);
+    const result = await DomLoader.getHTMLfromURL(url, domSelector);
+    if (result.error) throw Error(result.error);
 
     const snippets = this.snippetLoader.getSnippetForURL(url);
-    return {result, snippets}
+    return {result: result.result, snippets}
   }
 
   async matchAddress(expectedAddress, result, snippets) {
