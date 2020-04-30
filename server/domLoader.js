@@ -20,7 +20,7 @@ module.exports = class DomLoader {
       await page.goto(url, {
         waitUntil: 'networkidle2',
       }).catch(e => {
-        logger.info("trying wait until load after:", e.message);
+        logger.debug("trying wait until load after:", e.message);
         return page.goto(url, {
           waitUntil: 'load',
         })
@@ -45,7 +45,6 @@ module.exports = class DomLoader {
       await browser.close();
       return {result: selected ? selected : html, url: page.url()};
     } catch (e) {
-      logger.error(`Error while crawling ${url}: ${e.message}`);
       await browser.close();
       return {
         html: null,
