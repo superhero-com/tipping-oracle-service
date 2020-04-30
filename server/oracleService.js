@@ -17,15 +17,14 @@ module.exports = class OracleService {
     this.aeternity = new Aeternity();
     await this.aeternity.init(keyPair);
     await this.aeternity.awaitFunding(this.fundingAmount);
-    this.pageParser = new PageParser(this.aeternity);
 
-    logger.info("Oracle Client initialized ttl:", this.ttl, "auto extend:", this.autoExtend);
+    logger.debug("oracle client initialized with ttl:", this.ttl, "auto extend:", this.autoExtend);
   };
 
   register = async (queryFee = 20000000000000) => {
     if (!this.aeternity.client) throw "Client not initialized";
 
-    if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(() => null);
+    if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(logger.error);
     if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {
       queryFee: queryFee,
       oracleTtl: {type: 'delta', value: this.ttl}
@@ -37,7 +36,7 @@ module.exports = class OracleService {
         this.extendIfNeeded();
       }, (this.ttl / 5) * 3 * 60 * 1000); // every ttl/5 blocks
     }
-    logger.info("Oracle Id", this.oracle.id);
+    logger.info("oracle id", this.oracle.id);
   };
 
   extendIfNeeded = async () => {
@@ -45,7 +44,7 @@ module.exports = class OracleService {
 
     if (height > this.oracle.ttl - this.ttl / 5) {
       this.oracle = await this.oracle.extendOracle({type: 'delta', value: this.ttl});
-      logger.info("Extended Oracle at height:", height, "new ttl:", this.oracle.ttl);
+      logger.debug("extended oracle at height:", height, "new ttl:", this.oracle.ttl);
     }
   };
 
@@ -53,25 +52,28 @@ module.exports = class OracleService {
     if (!this.aeternity.client) throw "Client not initialized";
 
     this.stopPollQueries = await this.oracle.pollQueries(this.respond, {interval: 2000});
-    logger.info("Oracle Polling started")
+    logger.debug("oracle query polling started")
   };
 
   respond = async (queries) => {
     let query = Array.isArray(queries) ? queries.sort((a, b) => a.ttl - b.ttl)[queries.length - 1] : queries;
     if (!query) return;
 
-    const queryArgument = String(Crypto.decodeBase64Check(query.query.slice(3))).split(";");
-    logger.info("Oracle Respond: got query", JSON.stringify(queryArgument));
+    const responseLogger = require("./logger")(module, query.id);
+
+    const queryString = String(Crypto.decodeBase64Check(query.query.slice(3)));
+    const queryArgument = queryString.split(";");
+    responseLogger.info("oracle got query", queryString);
 
     const expectedAddress = queryArgument.shift();
     const url = queryArgument.join(";");
-    const parseResult = await this.pageParser.getAddressFromPage(expectedAddress, url);
+    const parseResult = await new PageParser(this.aeternity, query.id).getAddressFromPage(expectedAddress, url);
 
     if (parseResult) {
-      logger.info("Oracle Respond: will respond", parseResult);
+      responseLogger.info("oracle will respond", parseResult);
       await this.oracle.respondToQuery(query.id, parseResult, {responseTtl: {type: 'delta', value: 20}});
     } else {
-      logger.info("Oracle will not respond, no result found in page")
+      responseLogger.info("oracle will not respond, no result found in page")
     }
 
   };
@@ -79,7 +81,7 @@ module.exports = class OracleService {
   stopPolling = () => {
     if (this.stopPollQueries) this.stopPollQueries();
     if (this.extendIfNeededInterval) clearInterval(this.extendIfNeededInterval);
-    logger.info("Oracle Polling stopped");
+    logger.info("oracle query polling stopped");
   };
 };
 

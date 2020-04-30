@@ -1,11 +1,12 @@
 const SnippetLoader = require('./snippetLoader');
 const DomLoader = require("./domLoader");
 const Aeternity = require("./aeternity");
-const logger = require("./logger")(module);
+let logger = require("./logger")(module);
 
 module.exports = class PageParser {
 
-  constructor(aeternity = null) {
+  constructor(aeternity = null, contextInfo) {
+    if(contextInfo) logger = require("./logger")(module, contextInfo);
     this.snippetLoader = new SnippetLoader();
     this.aeternity = aeternity ? aeternity : new Aeternity();
   }
@@ -25,9 +26,7 @@ module.exports = class PageParser {
     } else {
       logger.info("trying fallback to original url", originalUrl);
       let {result, snippets} = await this.getResultAndSnippet(originalUrl);
-      const fallbackOriginal = await this.matchAddress(expectedAddress, result, snippets);
-      if(!fallbackOriginal) logger.warn("no result found", originalUrl);
-      return fallbackOriginal;
+      return this.matchAddress(expectedAddress, result, snippets);
     }
   }
 
