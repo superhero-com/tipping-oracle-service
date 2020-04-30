@@ -6,6 +6,7 @@ let logger = require("./logger")(module);
 module.exports = class PageParser {
 
   constructor(aeternity = null, contextInfo) {
+    this.contextInfo = contextInfo;
     if(contextInfo) logger = require("./logger")(module, contextInfo);
     this.snippetLoader = new SnippetLoader();
     this.aeternity = aeternity ? aeternity : new Aeternity();
@@ -31,7 +32,7 @@ module.exports = class PageParser {
   }
 
   async getResultAndSnippet(url){
-    const result = await DomLoader.getHTMLfromURL(url);
+    const result = await new DomLoader(this.contextInfo).getHTMLfromURL(url);
     if (result.error) throw Error(result.error);
 
     const snippets = this.snippetLoader.getSnippetForURL(url);
@@ -41,7 +42,7 @@ module.exports = class PageParser {
   async getResultAndSnippetDomSelector(originalUrl){
     const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
     if(url !== originalUrl) logger.info("use extracted url", originalUrl, url);
-    const result = await DomLoader.getHTMLfromURL(url, domSelector);
+    const result = await new DomLoader(this.contextInfo).getHTMLfromURL(url, domSelector);
     if (result.error) throw Error(result.error);
 
     const snippets = this.snippetLoader.getSnippetForURL(url);
