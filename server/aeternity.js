@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const qrcode = require('qrcode-terminal');
 const BigNumber = require("bignumber.js");
+const logger = require("./logger")(module);
 
 const util = require("./util");
 
@@ -50,11 +51,11 @@ module.exports = class Aeternity {
 
     if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isLessThan(new BigNumber(fundingAmount).dividedBy(2))) {
       qrcode.generate(this.keypair.publicKey, {small: true});
-      console.log("Fund Oracle Service Wallet", this.keypair.publicKey, util.atomsToAe(fundingAmount).toFixed(), "AE");
+      logger.info("Fund Oracle Service Wallet", this.keypair.publicKey, util.atomsToAe(fundingAmount).toFixed(), "AE");
       await new Promise(resolve => {
         const interval = setInterval(async () => {
           if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isGreaterThanOrEqualTo(fundingAmount)) {
-            console.log("received funding");
+            logger.info("received funding");
             resolve(true);
             clearInterval(interval);
           }

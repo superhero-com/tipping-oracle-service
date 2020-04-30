@@ -1,5 +1,6 @@
 // load dom from url
 const puppeteer = require('puppeteer');
+const logger = require("./logger")(module);
 
 module.exports = class DomLoader {
 
@@ -19,7 +20,7 @@ module.exports = class DomLoader {
       await page.goto(url, {
         waitUntil: 'networkidle2',
       }).catch(e => {
-        console.log("trying wait until load after:", e.message);
+        logger.info("trying wait until load after:", e.message);
         return page.goto(url, {
           waitUntil: 'load',
         })
@@ -44,7 +45,7 @@ module.exports = class DomLoader {
       await browser.close();
       return {result: selected ? selected : html, url: page.url()};
     } catch (e) {
-      console.error(`Error while crawling ${url}: ${e.message}`);
+      logger.error(`Error while crawling ${url}: ${e.message}`);
       await browser.close();
       return {
         html: null,
