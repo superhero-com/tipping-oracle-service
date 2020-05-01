@@ -37,7 +37,7 @@ module.exports = class OracleService {
       this.extendIfNeeded();
       this.extendIfNeededInterval = setInterval(() => {
         this.extendIfNeeded();
-      }, (this.ttl / 5) * 3 * 60 * 1000); // every ttl/5 blocks
+      }, (this.ttl / 5) * (60 / 3) * 1000); // every ttl/5 blocks
     }
   };
 
