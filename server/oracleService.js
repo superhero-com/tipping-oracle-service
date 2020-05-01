@@ -86,6 +86,7 @@ module.exports = class OracleService {
   stopPolling = () => {
     if (this.stopPollQueries) this.stopPollQueries();
     if (this.extendIfNeededInterval) clearInterval(this.extendIfNeededInterval);
+    this.aeternity.stopAwaitFundingCheck();
     logger.info("oracle query polling stopped");
   };
 };

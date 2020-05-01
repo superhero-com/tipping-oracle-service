@@ -15,6 +15,8 @@ const config = {
 
 module.exports = class Aeternity {
 
+  stopAwaitFunding = false;
+
   init = async (keyPair) => {
     if (!this.client) {
       this.keypair = this.getKeyPair(keyPair);
@@ -46,6 +48,10 @@ module.exports = class Aeternity {
     }
   };
 
+  stopAwaitFundingCheck = () => {
+    this.stopAwaitFunding = true;
+  }
+
   awaitFunding = async (fundingAmount) => {
     if (!this.client) throw "Client not initialized";
     logger.silly("check for funding")
@@ -64,7 +70,7 @@ module.exports = class Aeternity {
         }, 2000);
       });
     } else {
-      setTimeout(() => {
+      if (!this.stopAwaitFunding) setTimeout(() => {
         this.awaitFunding(fundingAmount)
       }, 20000);
     }
