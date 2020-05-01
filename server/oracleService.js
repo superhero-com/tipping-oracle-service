@@ -25,7 +25,7 @@ module.exports = class OracleService {
   register = async (queryFee = 20000000000000) => {
     if (!this.aeternity.client) throw "Client not initialized";
 
-    if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(logger.error);
+    if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(() => null);
     if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {
       queryFee: queryFee,
       oracleTtl: {type: 'delta', value: this.ttl}

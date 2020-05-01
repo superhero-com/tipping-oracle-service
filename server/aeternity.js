@@ -48,6 +48,7 @@ module.exports = class Aeternity {
 
   awaitFunding = async (fundingAmount) => {
     if (!this.client) throw "Client not initialized";
+    logger.silly("check for funding")
 
     if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isLessThan(new BigNumber(fundingAmount).dividedBy(2))) {
       qrcode.generate(this.keypair.publicKey, {small: true});
@@ -57,10 +58,15 @@ module.exports = class Aeternity {
           if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isGreaterThanOrEqualTo(fundingAmount)) {
             logger.info("received funding");
             resolve(true);
+            this.awaitFunding(fundingAmount)
             clearInterval(interval);
           }
-        }, 1000);
+        }, 2000);
       });
+    } else {
+      setTimeout(() => {
+        this.awaitFunding(fundingAmount)
+      }, 20000);
     }
   };
 
