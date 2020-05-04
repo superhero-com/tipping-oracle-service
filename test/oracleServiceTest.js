@@ -94,6 +94,11 @@ describe('Oracle Service Contract', () => {
         assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, account: wallets[0].publicKey});
     });
 
+    it('Oracle Service Contract: Check Claim with other Account', async () => {
+        const checkClaim = await contract.methods.check_persist_claim("http://localhost:3001/sample-site.txt", wallets[1].publicKey, false).catch(e => e);
+        assert.include(checkClaim.decodedError, "MORE_ORACLE_ANSWERS_REQUIRED");
+    });
+
     it('Oracle Service Contract: Delete Oracle', async () => {
         const deleteOracle = await contract.methods.remove_oracle(1);
         assert.equal(deleteOracle.result.returnType, 'ok');
