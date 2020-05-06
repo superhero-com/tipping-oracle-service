@@ -5,7 +5,7 @@ let logger = require("./logger")(module);
 
 module.exports = class PageParser {
 
-  constructor(aeternity = null, contextInfo) {
+  constructor(aeternity = null, contextInfo = null) {
     this.contextInfo = contextInfo;
     if(contextInfo) logger = require("./logger")(module, contextInfo);
     this.snippetLoader = new SnippetLoader();
