@@ -47,7 +47,7 @@ module.exports = class OracleService {
 
     if (height > this.oracle.ttl - this.ttl / 5) {
       this.oracle = await this.oracle.extendOracle({type: 'delta', value: this.ttl});
-      logger.debug("extended oracle at height:", height, "new ttl:", this.oracle.ttl);
+      logger.info("extended oracle at height:", height, "new ttl:", this.oracle.ttl);
     } else {
       logger.debug("no need to extend oracle at height:", height, "ttl:", this.oracle.ttl);
     }
