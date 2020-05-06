@@ -29,7 +29,7 @@ const config = {
 describe('Oracle Service Contract', () => {
     let contract, oracleServices;
     let numberOfOracles = 4;
-    let firstOracleTtl = 15;
+    let firstOracleTtl = 20;
 
     before(async () => {
         client = await Universal({
@@ -105,7 +105,7 @@ describe('Oracle Service Contract', () => {
         assert.include(queryFee.decodedError, "MORE_ORACLES_REQUIRED");
     });
 
-    it('Oracle Service Contract: Delete Oracle', async () => {
+    it('Oracle Service Contract: Set minimum amount of Oracles', async () => {
         const deleteOracle = await contract.methods.set_minimum_amount_of_oracles(numberOfOracles - 2);
         assert.equal(deleteOracle.result.returnType, 'ok');
 
