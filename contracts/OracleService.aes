@@ -92,6 +92,17 @@ contract OracleService =
   entrypoint estimate_query_fee() : int =
     estimate_query_fee_iterate(0, checked_oracles())
 
+  entrypoint checked_oracles() : list(oracle_type) =
+    let oracles = [ oracle | (_, oracle) <- Map.to_list(state.trusted_oracles), if (check_oracle(oracle)) ]
+    require(List.length(oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_REQUIRED")
+    oracles
+
+  // unsafe as in shouldn't be used from within the contract, as there is no account check, just for dry-run purposes
+  entrypoint unsafe_check_oracle_answers(url : string) : list(option(string)) =
+    switch(Map.lookup(url, state.oracle_queries))
+      Some(queries) => [ Oracle.get_answer(oracle, query) | (oracle, query) <- queries, if (check_oracle(oracle)) ]
+      None => []
+
   // INTERNAL FUNCTIONS
 
   stateful function check_claim(url : string, account : address) : success_claim =
@@ -121,11 +132,6 @@ contract OracleService =
     estimate_query_fee_iterate(fee_acc, o :: os) = estimate_query_fee_iterate(fee_acc + Oracle.query_fee(o), os)
 
   function check_oracle(o : oracle_type) : bool = Oracle.check(o)
-
-  function checked_oracles() : list(oracle_type) =
-    let oracles = [ oracle | (_, oracle) <- Map.to_list(state.trusted_oracles), if (check_oracle(oracle)) ]
-    require(List.length(oracles) >= state.minimum_amount_of_oracles, "MORE_ORACLES_REQUIRED")
-    oracles
 
   function require_owner() =
     require(Call.caller == state.owner, "OWNER_REQUIRED")
