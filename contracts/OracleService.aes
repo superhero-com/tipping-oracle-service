@@ -40,6 +40,10 @@ contract OracleService =
     , success_claimed_urls : map(string, success_claim)
     , owner : address }
 
+  datatype event =
+    QueryOracle(string, address)
+    | CheckPersistClaim(string, address, int)
+
   entrypoint init(minimum_amount_of_oracles : int, owner : address) =
     { trusted_oracles = {},
       trusted_oracle_seq = 0,
@@ -69,6 +73,7 @@ contract OracleService =
     let query_oracle = (oracle) => (oracle, Oracle.query(oracle, query_string, Oracle.query_fee(oracle), RelativeTTL(20), RelativeTTL(20)))
     let queries = List.map(query_oracle, checked_oracles())
     put(state{ oracle_queries = state.oracle_queries{[url] = queries }})
+    Chain.event(QueryOracle(url, expected_account))
 
   stateful entrypoint check_persist_claim(url : string, account : address, recheck : bool) : success_claim =
     let success_claim = state.success_claimed_urls[url = { success = false, account = account, percentage = 0 }]
@@ -77,6 +82,7 @@ contract OracleService =
     else
       let checked_claim = check_claim(url, account)
       put(state{ success_claimed_urls[url] = checked_claim })
+      Chain.event(CheckPersistClaim(url, account, checked_claim.percentage))
       checked_claim
 
   // GETTER FUNCTIONS

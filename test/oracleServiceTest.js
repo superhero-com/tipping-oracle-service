@@ -17,6 +17,8 @@
 const {Universal, MemoryAccount, Node, Crypto} = require('@aeternity/aepp-sdk');
 const Oracle = require('../server/oracleService.js');
 const util = require('../server/util');
+require = require('esm')(module) //use to handle es6 import/export
+const {decodeEvents, SOPHIA_TYPES} = require('@aeternity/aepp-sdk/es/contract/aci/transformation')
 
 const ORACLE_SERVICE_CONTRACT_PATH = utils.readFileRelative('./contracts/OracleService.aes', 'utf-8');
 
@@ -25,6 +27,11 @@ const config = {
     internalUrl: 'http://localhost:3001/',
     compilerUrl: 'http://localhost:3080'
 };
+
+const eventsSchema = [
+    {name: 'QueryOracle', types: [SOPHIA_TYPES.string, SOPHIA_TYPES.address]},
+    {name: 'CheckPersistClaim', types: [SOPHIA_TYPES.string, SOPHIA_TYPES.address, SOPHIA_TYPES.int]}
+];
 
 describe('Oracle Service Contract', () => {
     let contract, oracleServices;
@@ -86,12 +93,24 @@ describe('Oracle Service Contract', () => {
         const queryFee = await contract.methods.estimate_query_fee();
         const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", wallets[0].publicKey, {amount: queryFee.decodedResult});
         assert.equal(queryOracle.result.returnType, 'ok');
+
+        const decodedEvent = decodeEvents(queryOracle.result.log, {schema: eventsSchema});
+        assert.equal(decodedEvent[0].name, "QueryOracle");
+        assert.equal(decodedEvent[0].decoded[0], "http://localhost:3001/sample-site.txt");
+        assert.equal(`ak_${decodedEvent[0].decoded[1]}`, wallets[0].publicKey);
+
         await new Promise((resolve) => setTimeout(() => resolve(), 2000));
     });
 
     it('Oracle Service Contract: Check Claim', async () => {
         const checkClaim = await contract.methods.check_persist_claim("http://localhost:3001/sample-site.txt", wallets[0].publicKey, false);
         assert.deepEqual(checkClaim.decodedResult, {success: true, percentage: 100, account: wallets[0].publicKey});
+
+        const decodedEvent = decodeEvents(checkClaim.result.log, {schema: eventsSchema});
+        assert.equal(decodedEvent[0].name, "CheckPersistClaim");
+        assert.equal(decodedEvent[0].decoded[0], "http://localhost:3001/sample-site.txt");
+        assert.equal(`ak_${decodedEvent[0].decoded[1]}`, wallets[0].publicKey);
+        assert.equal(decodedEvent[0].decoded[2], 100);
     });
 
     it('Oracle Service Contract: Check Claim with other Account', async () => {
