@@ -32,6 +32,7 @@ const deploy = async () => {
 
   const init = await contract.methods.init(1, keypair.publicKey);
   console.log(init);
+  return init;
 };
 
 const getState = async (contractAddress) => {
@@ -51,6 +52,11 @@ const addOracle = async (contractAddress, oracleId) => {
   console.log(oracle);
 };
 
-//deploy();
-//addOracle("ct_4J8gn4wp55fKZiJPJAzvfHiMk9eLs8M5XsLVQgLEPnCvNqxiQ", "ok_2Ez3Y4gQ1USuNxmSJry5YomnqsF6YTVVVFXVasB3jTSgbroB4z");
-//getState("ct_4J8gn4wp55fKZiJPJAzvfHiMk9eLs8M5XsLVQgLEPnCvNqxiQ")
+const main = async () => {
+  //const init = await deploy();
+  //await addOracle(init.result.contractId, "ok_V3qADaNf3rUnPBTY3kNBDZM6sf5m26HeTpZejeTjbYr7HK63h");
+  //getState("ct_4J8gn4wp55fKZiJPJAzvfHiMk9eLs8M5XsLVQgLEPnCvNqxiQ")
+};
+
+main();
+
