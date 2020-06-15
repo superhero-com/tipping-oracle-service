@@ -10,6 +10,7 @@ module.exports = class OracleService {
     this.fundingAmount = 10000000000000000;
     this.ttl = 500;
     this.autoExtend = true;
+    this.stopPollQueries = null;
   }
 
   init = async (keyPair = null, ttl = 500, autoExtend = true) => {
@@ -80,14 +81,18 @@ module.exports = class OracleService {
     } else {
       responseLogger.info("oracle will not respond, no result found in page")
     }
-
   };
 
   stopPolling = () => {
     if (this.stopPollQueries) this.stopPollQueries();
+    this.stopPollQueries = null;
     if (this.extendIfNeededInterval) clearInterval(this.extendIfNeededInterval);
     this.aeternity.stopAwaitFundingCheck();
     logger.info("oracle query polling stopped");
   };
+
+   isRunning = async () => {
+    return typeof this.stopPollQueries === 'function' && (await this.aeternity.client.height()) < this.oracle.ttl;
+  }
 };
 
