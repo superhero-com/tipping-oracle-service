@@ -22,7 +22,7 @@ const main = async () => {
       res.writeHead(500);
       res.end(e);
     });
-  }).listen(3000);
+  }).listen(process.env.PORT || 3000);
 };
 
 main();
