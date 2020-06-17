@@ -13,14 +13,14 @@ const main = async () => {
   await oracleService.startPolling();
 
   // Healthcheck
-  http.createServer( (request, response) => {
+  http.createServer( (req, res) => {
     oracleService.isRunning().then(result => {
-      response.writeHead(result ? 200 : 500);
+      res.writeHead(result ? 200 : 500);
+      res.end(result ? "OK" : "NOT RUNNING");
     }).catch(e => {
       logger.error(e);
-      response.writeHead(500);
-    }).finally(() => {
-      response.end();
+      res.writeHead(500);
+      res.end(e);
     });
   }).listen(3000);
 };
