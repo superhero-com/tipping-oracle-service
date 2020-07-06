@@ -7,7 +7,8 @@
     "node-compiler": "aeproject node && aeproject compiler",
     "test": "aeproject test",
     "snippet": "node server/snippetLoader.js",
-    "domLoader": "node server/domLoader.js"
+    "domLoader": "node server/domLoader.js",
+    "postinstall": "node .scripts/postinstall.js"
   },
   "author": "",
   "license": "ISC",
