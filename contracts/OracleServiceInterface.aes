@@ -21,3 +21,5 @@ contract OracleService =
 
   entrypoint get_state : () => state
   entrypoint estimate_query_fee : () => int
+  entrypoint unsafe_check_oracle_answers : (string) => list(option(string))
+
