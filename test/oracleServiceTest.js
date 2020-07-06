@@ -21,6 +21,7 @@ require = require('esm')(module) //use to handle es6 import/export
 const {decodeEvents, SOPHIA_TYPES} = require('@aeternity/aepp-sdk/es/contract/aci/transformation')
 
 const ORACLE_SERVICE_CONTRACT_PATH = utils.readFileRelative('./contracts/OracleService.aes', 'utf-8');
+const ORACLE_SERVICE_INTERFACE_PATH = utils.readFileRelative('./contracts/OracleServiceInterface.aes', 'utf-8');
 
 const config = {
     url: 'http://localhost:3001/',
@@ -136,5 +137,11 @@ describe('Oracle Service Contract', () => {
         const queryFee = await contract.methods.estimate_query_fee();
         const queryOracle = await contract.methods.query_oracle("http://localhost:3001/sample-site.txt", wallets[0].publicKey, {amount: queryFee.decodedResult});
         assert.equal(queryOracle.result.returnType, 'ok');
+    });
+
+    it('Oracle Service Interface: Get State', async () => {
+        const interface = await client.getContractInstance(ORACLE_SERVICE_INTERFACE_PATH, {contractAddress: contract.deployInfo.address});
+        const state = await interface.methods.get_state();
+        assert.equal(state.result.returnType, 'ok');
     });
 });
