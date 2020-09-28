@@ -1,15 +1,14 @@
 const SnippetLoader = require('./snippetLoader');
 const DomLoader = require("./domLoader");
-const Aeternity = require("./aeternity");
 let logger = require("./logger")(module);
 
 module.exports = class PageParser {
 
-  constructor(aeternity = null, contextInfo = null) {
+  constructor(aeternity, contextInfo = null) {
     this.contextInfo = contextInfo;
     if(contextInfo) logger = require("./logger")(module, contextInfo);
     this.snippetLoader = new SnippetLoader();
-    this.aeternity = aeternity ? aeternity : new Aeternity();
+    this.aeternity = aeternity;
   }
 
   async getAddressFromPage(expectedAddress, originalUrl) {
