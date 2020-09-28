@@ -9,6 +9,9 @@ module.exports = class SnippetLoader {
 
     const extractors = fs.readFileSync(path.resolve(__dirname, "../config/regex-url-extractors.txt"), "utf8");
     this.extractors = this.parseUrlExtractorsFile(extractors);
+
+    const follows = fs.readFileSync(path.resolve(__dirname, "../config/regex-url-follow.txt"), "utf8");
+    this.follows = this.parseUrlFollowsFile(follows);
   }
 
   parseUrlExtractorsFile(rawData) {
@@ -26,9 +29,24 @@ module.exports = class SnippetLoader {
     }).filter(entry => !!entry)
   }
 
+  parseUrlFollowsFile(rawData) {
+    const rows = rawData.split('\n');
+    return rows.map(row => {
+      row = row.trim();
+      if (row.startsWith("#")) return null;
+      if (row.length === 0) return null;
+      const splitRow = row.split(' ');
+      return {
+        urlRegex: splitRow.shift(),
+        prependUrl: splitRow.shift(),
+        domSelector: splitRow.join(' ')
+      }
+    }).filter(entry => !!entry)
+  }
+
   getExtractionForUrl(url) {
     const extractor = this.extractors.find(({urlRegex}) => url.match(urlRegex));
-    if (!extractor) return {url, domSelector: null, appendUrl: null};
+    if (!extractor) return {url, domSelector: null};
 
     const matchedUrl = url.match(extractor.urlRegex);
     if (matchedUrl.groups && matchedUrl.groups.url) return {
@@ -36,6 +54,19 @@ module.exports = class SnippetLoader {
       domSelector: extractor.domSelector
     };
     else return {url, domSelector: null};
+  }
+
+  getFollowForUrl(url) {
+    const follow = this.follows.find(({urlRegex}) => url.match(urlRegex));
+    if (!follow) return {url, domSelector: null, prependUrl: ''};
+
+    const matchedUrl = url.match(follow.urlRegex);
+    if (matchedUrl.groups && matchedUrl.groups.url) return {
+      url: matchedUrl.groups.url,
+      domSelector: follow.domSelector,
+      prependUrl: follow.prependUrl
+    };
+    else return {url, domSelector: null, prependUrl: ''};
   }
 
   parseSnippetFile(rawData) {

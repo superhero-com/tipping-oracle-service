@@ -45,9 +45,10 @@ module.exports = class DomLoader {
       const html = await page.content();
 
       let selected = selector ? await page.$eval(selector, e => e.innerText) : null;
+      let href = selector ? await page.$eval(selector, e => e.getAttribute('href')) : null;
 
       await browser.close();
-      return {result: selected ? selected : html, url: page.url()};
+      return {result: selected ? selected : html, url: page.url(), href};
     } catch (e) {
       await browser.close();
       return {

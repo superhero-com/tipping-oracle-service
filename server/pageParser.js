@@ -6,27 +6,40 @@ module.exports = class PageParser {
 
   constructor(aeternity, contextInfo = null) {
     this.contextInfo = contextInfo;
-    if(contextInfo) logger = require("./logger")(module, contextInfo);
+    if (contextInfo) logger = require("./logger")(module, contextInfo);
     this.snippetLoader = new SnippetLoader();
     this.aeternity = aeternity;
   }
 
   async getAddressFromPage(expectedAddress, originalUrl) {
-    let matched;
+    let matched, followUrl;
+    let url = originalUrl;
+
     try {
-      let {result, snippets} = await this.getResultAndSnippetDomSelector(originalUrl);
+      followUrl = await this.getFollowUrl(originalUrl);
+
+      if (followUrl && followUrl !== url) {
+        url = followUrl;
+        logger.info("following to url", url);
+      }
+    } catch (e) {
+      logger.warn("error get follow url", e.message);
+    }
+
+    try {
+      let {result, snippets} = await this.getResultAndSnippetDomSelector(url);
       matched = await this.matchAddress(expectedAddress, result, snippets);
     } catch (e) {
       logger.warn("parse error with dom selector", e.message);
     }
 
     if (matched) {
-      logger.info("matched", originalUrl, matched);
+      logger.info("matched", url, matched);
       return matched;
     } else {
-      logger.info("trying fallback to original url", originalUrl);
+      logger.info("trying fallback to original url", url);
       try {
-        let {result, snippets} = await this.getResultAndSnippet(originalUrl);
+        let {result, snippets} = await this.getResultAndSnippet(url);
         return this.matchAddress(expectedAddress, result, snippets);
       } catch (e) {
         logger.warn("parse error", e.message);
@@ -36,7 +49,15 @@ module.exports = class PageParser {
     return null;
   }
 
-  async getResultAndSnippet(url){
+  async getFollowUrl(originalUrl) {
+    const {url, domSelector, prependUrl} = this.snippetLoader.getFollowForUrl(originalUrl);
+    if (url && domSelector) {
+      const followResult = await new DomLoader(this.contextInfo).getHTMLfromURL(url, domSelector);
+      return followResult && followResult.href ? prependUrl + followResult.href : originalUrl;
+    }
+  }
+
+  async getResultAndSnippet(url) {
     const result = await new DomLoader(this.contextInfo).getHTMLfromURL(url);
     if (result.error) throw Error(result.error);
 
@@ -44,9 +65,9 @@ module.exports = class PageParser {
     return {result: result.result, snippets}
   }
 
-  async getResultAndSnippetDomSelector(originalUrl){
+  async getResultAndSnippetDomSelector(originalUrl) {
     const {url, domSelector} = this.snippetLoader.getExtractionForUrl(originalUrl);
-    if(url !== originalUrl) logger.info("use extracted url", originalUrl, url);
+    if (url !== originalUrl) logger.info("use extracted url", originalUrl, url);
     const result = await new DomLoader(this.contextInfo).getHTMLfromURL(url, domSelector);
     if (result.error) throw Error(result.error);
 
