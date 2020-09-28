@@ -20,18 +20,19 @@ module.exports = class SnippetLoader {
       const splitRow = row.split(' ');
       return {
         urlRegex: splitRow.shift(),
-        domSelector: splitRow.join(' ')
+        domSelector: splitRow.shift(),
+        appendUrl: splitRow.join(' ').trim() === '' ? null : splitRow.join(' ').trim()
       }
     }).filter(entry => !!entry)
   }
 
   getExtractionForUrl(url) {
     const extractor = this.extractors.find(({urlRegex}) => url.match(urlRegex));
-    if (!extractor) return {url, domSelector: null};
+    if (!extractor) return {url, domSelector: null, appendUrl: null};
 
     const matchedUrl = url.match(extractor.urlRegex);
     if (matchedUrl.groups && matchedUrl.groups.url) return {
-      url: matchedUrl.groups.url,
+      url: matchedUrl.groups.url + (extractor.appendUrl ? extractor.appendUrl : ''),
       domSelector: extractor.domSelector
     };
     else return {url, domSelector: null};
