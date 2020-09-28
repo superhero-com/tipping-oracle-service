@@ -9,8 +9,7 @@ const util = require("./util");
 
 const config = {
   url: 'http://localhost:3001/',
-  internalUrl: 'http://localhost:3001/',
-  compilerUrl: 'http://localhost:3080'
+  internalUrl: 'http://localhost:3001/'
 };
 
 module.exports = class Aeternity {
