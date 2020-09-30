@@ -13,10 +13,10 @@ module.exports = class PageParser {
 
   async getAddressFromPage(expectedAddress, originalUrl) {
     let matched, followUrl;
-    let url = originalUrl;
+    let {url} = await new DomLoader(this.contextInfo).getHTMLfromURL(originalUrl);
 
     try {
-      followUrl = await this.getFollowUrl(originalUrl);
+      followUrl = await this.getFollowUrl(url);
 
       if (followUrl && followUrl !== url) {
         url = followUrl;
