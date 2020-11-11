@@ -3,3 +3,5 @@
 # 3. append to url before extraction
 (?<url>https:\/\/twitter.com\/[a-zA-Z0-9_]+) [data-testid="UserDescription"]
 (?<url>https:\/\/www.youtube.com\/(c|channel)\/[a-zA-Z0-9_-]+) #description /about
+(?<url>https:\/\/superhero.com\/tip\/\d+(?:_v\d+)?) .tip__body .address
+(?<url>https:\/\/superhero.com\/tip\/\d+(?:_v\d+)?\/comment\/\d+) .body .address
