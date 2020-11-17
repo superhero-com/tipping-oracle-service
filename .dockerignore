@@ -8,3 +8,4 @@ test
 deployment
 .data/keypair.json
 data
+server/test.js

@@ -1,4 +1,7 @@
 # 1. extract url will be named capture group 'url',
 # 2. url to be prepended to what is extracted from href, if none 2 spaces
 # 3. domselector containing href to follow
-(?<url>https:\/\/www.youtube.com\/watch\?v=[a-zA-Z0-9_-]+) https://www.youtube.com #upload-info #channel-name a
+# CAREFUL TWO SPACES TO SPLIT
+# CAREFUL ORDER IS IMPORTANT; FIRST WILL MATCH FIRST
+(?<url>https:\/\/www.youtube.com\/watch\?v=[a-zA-Z0-9_-]+)  #upload-info #channel-name a  https://www.youtube.com
+(?<url>https:\/\/superhero.com\/tip\/\d+(?:_v\d+)?)  .site__url a
