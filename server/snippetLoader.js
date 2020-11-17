@@ -20,11 +20,11 @@ module.exports = class SnippetLoader {
       row = row.trim();
       if (row.startsWith("#")) return null;
       if (row.length === 0) return null;
-      const splitRow = row.split(' ');
+      const splitRow = row.split('  ');
       return {
         urlRegex: splitRow.shift(),
         domSelector: splitRow.shift(),
-        appendUrl: splitRow.join(' ').trim() === '' ? null : splitRow.join(' ').trim()
+        appendUrl: splitRow.join('  ')
       }
     }).filter(entry => !!entry)
   }
@@ -35,11 +35,11 @@ module.exports = class SnippetLoader {
       row = row.trim();
       if (row.startsWith("#")) return null;
       if (row.length === 0) return null;
-      const splitRow = row.split(' ');
+      const splitRow = row.split('  ');
       return {
         urlRegex: splitRow.shift(),
-        prependUrl: splitRow.shift(),
-        domSelector: splitRow.join(' ')
+        domSelector: splitRow.shift(),
+        prependUrl: splitRow.join('  ')
       }
     }).filter(entry => !!entry)
   }
