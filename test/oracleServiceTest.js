@@ -14,14 +14,18 @@
  *  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  *  PERFORMANCE OF THIS SOFTWARE.
  */
+const assert = require('chai').assert
 const {Universal, MemoryAccount, Node, Crypto} = require('@aeternity/aepp-sdk');
 const Oracle = require('../server/oracleService.js');
 const util = require('../server/util');
 require = require('esm')(module) //use to handle es6 import/export
 const {decodeEvents, SOPHIA_TYPES} = require('@aeternity/aepp-sdk/es/contract/aci/transformation')
 
-const ORACLE_SERVICE_CONTRACT_PATH = utils.readFileRelative('./contracts/OracleService.aes', 'utf-8');
-const ORACLE_SERVICE_INTERFACE_PATH = utils.readFileRelative('./contracts/OracleServiceInterface.aes', 'utf-8');
+const {readFileRelative} = require('aeproject-utils/utils/fs-utils');
+const {defaultWallets: wallets} = require('aeproject-config/config/node-config.json');
+
+const ORACLE_SERVICE_CONTRACT_PATH = readFileRelative('./contracts/OracleService.aes', 'utf-8');
+const ORACLE_SERVICE_INTERFACE_PATH = readFileRelative('./contracts/OracleServiceInterface.aes', 'utf-8');
 
 const config = {
     url: 'http://localhost:3001/',
