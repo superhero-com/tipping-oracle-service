@@ -4,8 +4,8 @@
   "description": "This is the default package.json generated for your project",
   "main": "index.js",
   "scripts": {
-    "node-compiler": "aeproject node && aeproject compiler",
-    "test": "aeproject test",
+    "env": "aeproject env",
+    "test": "NODE_ENV=test mocha ./test/**/*.js --timeout 0 --exit",
     "snippet": "node server/snippetLoader.js",
     "domLoader": "node server/domLoader.js",
     "postinstall": "node .scripts/postinstall.js"
@@ -14,11 +14,18 @@
   "license": "ISC",
   "dependencies": {
     "@aeternity/aepp-sdk": "^7.7.0",
+    "aeproject-config": "^2.2.0",
+    "aeproject-utils": "^2.2.0",
     "aeproject-lib": "^2.2.0",
     "bignumber.js": "^9.0.0",
+    "chai": "^4.2.0",
     "esm": "^3.2.25",
     "puppeteer": "^5.3.1",
     "qrcode-terminal": "^0.12.0",
     "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "aeproject": "^2.2.0",
+    "mocha": "^8.2.1"
   }
 }
