@@ -7,16 +7,13 @@ const logger = require("./logger")(module);
 
 const util = require("./util");
 
-const config = {
-  url: 'http://localhost:3001/',
-  internalUrl: 'http://localhost:3001/'
-};
+const testUrl =  'http://localhost:3001/';
 
 module.exports = class Aeternity {
 
   stopAwaitFunding = false;
 
-  init = async (keyPair) => {
+  init = async (keyPair, nodeUrl = null) => {
     if (!this.client) {
       this.keypair = this.getKeyPair(keyPair);
       this.client = await Universal({
@@ -24,8 +21,7 @@ module.exports = class Aeternity {
           {
             name: 'mainnetNode',
             instance: await Node({
-              url: process.env.NODE_URL || config.url,
-              internalUrl: process.env.NODE_URL || config.internalUrl,
+              url: process.env.NODE_URL || nodeUrl || testUrl,
             }),
           }],
         accounts: [MemoryAccount({keypair: this.keypair})],
