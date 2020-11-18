@@ -38,7 +38,7 @@ describe('Page Parser', () => {
 
   it('Follow Superhero Tip, Extract Original Creator', async () => {
     const expectedAddress = "ak_2oBEG11B2GZSWVdVUQy1CYEvgWCfeizEGzjDaQB1YFv4owMcbd";
-    const url = "https://superhero.com/tip/2169_v1";
+    const url = "https://superhero.com/tip/1375_v1";
 
     const result = await pageParser.getAddressFromPage(expectedAddress, url);
     assert.equal(result, expectedAddress);
@@ -46,6 +46,22 @@ describe('Page Parser', () => {
 
   it('Follow Superhero Comment, Extract Original Creator', async () => {
     const expectedAddress = "ak_2bP6pT5bKSkUpibFWAiv8hdgTgS854mhe3EAZh2i3hEyCY3Zno";
+    const url = "https://superhero.com/tip/1375_v1/comment/497";
+
+    const result = await pageParser.getAddressFromPage(expectedAddress, url);
+    assert.equal(result, expectedAddress);
+  });
+
+  it('Follow Superhero Tip, Extract Original Creator no Follow', async () => {
+    const expectedAddress = "ak_rRVV9aDnmmLriPePDSvfTUvepZtR2rbYk2Mx4GCqGLcc1DMAq";
+    const url = "https://superhero.com/tip/2169_v1";
+
+    const result = await pageParser.getAddressFromPage(expectedAddress, url);
+    assert.equal(result, expectedAddress);
+  });
+
+  it('Follow Superhero Comment, Extract Original Creator no Follow', async () => {
+    const expectedAddress = "ak_rRVV9aDnmmLriPePDSvfTUvepZtR2rbYk2Mx4GCqGLcc1DMAq";
     const url = "https://superhero.com/tip/2170_v1";
 
     const result = await pageParser.getAddressFromPage(expectedAddress, url);
