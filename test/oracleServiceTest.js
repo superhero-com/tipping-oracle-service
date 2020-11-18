@@ -29,7 +29,6 @@ const ORACLE_SERVICE_INTERFACE_PATH = readFileRelative('./contracts/OracleServic
 
 const config = {
     url: 'http://localhost:3001/',
-    internalUrl: 'http://localhost:3001/',
     compilerUrl: 'http://localhost:3080'
 };
 
