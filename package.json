@@ -17,15 +17,15 @@
     "aeproject-config": "^2.2.0",
     "aeproject-utils": "^2.2.0",
     "aeproject-lib": "^2.2.0",
-    "bignumber.js": "^9.0.0",
-    "chai": "^4.2.0",
+    "bignumber.js": "^9.0.1",
+    "chai": "^4.3.0",
     "esm": "^3.2.25",
-    "puppeteer": "^5.3.1",
+    "puppeteer": "^7.1.0",
     "qrcode-terminal": "^0.12.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
     "aeproject": "^2.2.0",
-    "mocha": "^8.2.1"
+    "mocha": "^8.3.0"
   }
 }
