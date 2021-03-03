@@ -64,9 +64,9 @@ module.exports = class Aeternity {
         const interval = setInterval(async () => {
           if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isGreaterThanOrEqualTo(fundingAmount)) {
             logger.info("received funding");
-            resolve(true);
             this.timeoutAwaitFunding(fundingAmount)
             clearInterval(interval);
+            resolve(true);
           }
         }, 2000);
       });
