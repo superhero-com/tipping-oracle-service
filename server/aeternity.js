@@ -47,6 +47,12 @@ module.exports = class Aeternity {
     this.stopAwaitFunding = true;
   }
 
+  timeoutAwaitFunding = async (fundingAmount) => {
+    if (!this.stopAwaitFunding) setTimeout(() => {
+      this.awaitFunding(fundingAmount)
+    }, 120 * 1000);
+  }
+
   awaitFunding = async (fundingAmount) => {
     if (!this.client) throw "Client not initialized";
     logger.silly("check for funding")
@@ -59,15 +65,13 @@ module.exports = class Aeternity {
           if (new BigNumber(await this.client.getBalance(this.keypair.publicKey)).isGreaterThanOrEqualTo(fundingAmount)) {
             logger.info("received funding");
             resolve(true);
-            this.awaitFunding(fundingAmount)
+            this.timeoutAwaitFunding(fundingAmount)
             clearInterval(interval);
           }
         }, 2000);
       });
     } else {
-      if (!this.stopAwaitFunding) setTimeout(() => {
-        this.awaitFunding(fundingAmount)
-      }, 20000);
+      this.timeoutAwaitFunding(fundingAmount)
     }
   };
 
