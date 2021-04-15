@@ -1,0 +1,21 @@
+contract OracleService =
+  type oracle_type = oracle(string, string)
+  type oracle_query_tuples = list(oracle_type * oracle_query(string, string))
+
+  record success_claim = { success : bool, account : address, percentage : int }
+  record state = { trusted_oracles : map(int, oracle_type), trusted_oracle_seq : int, oracle_queries : map(string, oracle_query_tuples), minimum_amount_of_oracles : int, success_claimed_urls : map(string, success_claim), owner : address }
+
+  entrypoint get_state : () => state
+
+contract OracleGetter =
+
+  entrypoint get_oracle_claimed_urls_by_account(c : OracleService, account : address) : list(string) =
+    let list_success_claimed_urls = Map.to_list(c.get_state().success_claimed_urls)
+    [ url | (url, success_claim) <- list_success_claimed_urls, if(success_claim.success && success_claim.account == account) ]
+
+  entrypoint get_oracle_claimed_urls(c : OracleService) : list(string) =
+    let list_success_claimed_urls = Map.to_list(c.get_state().success_claimed_urls)
+    [ url | (url, success_claim) <- list_success_claimed_urls, if(success_claim.success) ]
+
+  entrypoint get_oracle_claim_by_url(c : OracleService, url : string) : option(OracleService.success_claim) =
+    Map.lookup(url, c.get_state().success_claimed_urls)
