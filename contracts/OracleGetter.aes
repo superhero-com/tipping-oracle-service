@@ -1,4 +1,6 @@
-contract OracleService =
+@compiler >= 6
+
+contract interface OracleService =
   type oracle_type = oracle(string, string)
   type oracle_query_tuples = list(oracle_type * oracle_query(string, string))
 
@@ -7,7 +9,7 @@ contract OracleService =
 
   entrypoint get_state : () => state
 
-contract OracleGetter =
+main contract OracleGetter =
 
   entrypoint get_oracle_claimed_urls_by_account(c : OracleService, account : address) : list(string) =
     let list_success_claimed_urls = Map.to_list(c.get_state().success_claimed_urls)
