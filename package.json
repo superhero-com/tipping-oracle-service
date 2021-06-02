@@ -13,19 +13,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aeternity/aepp-sdk": "^8.0.0",
-    "aeproject-config": "^2.2.0",
-    "aeproject-utils": "^2.2.0",
-    "aeproject-lib": "^2.2.0",
+    "@aeternity/aepp-sdk": "8.1.0",
     "bignumber.js": "^9.0.1",
-    "chai": "^4.3.0",
     "esm": "^3.2.25",
+    "prompts": "^2.4.1",
     "puppeteer": "^7.1.0",
     "qrcode-terminal": "^0.12.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "aeproject": "^2.2.0",
-    "mocha": "^8.3.0"
+    "chai": "^4.3.4",
+    "mocha": "^8.4.0"
   }
 }

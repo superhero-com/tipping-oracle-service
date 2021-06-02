@@ -18,9 +18,10 @@
 // THIS IS NOT SECURITY AUDITED
 // DO NEVER USE THIS WITHOUT SECURITY AUDIT FIRST
 
-@compiler >= 4.2
+@compiler >= 5
 
 include "List.aes"
+include "String.aes"
 
 contract OracleService =
 
