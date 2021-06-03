@@ -4,7 +4,6 @@
   "description": "This is the default package.json generated for your project",
   "main": "index.js",
   "scripts": {
-    "env": "aeproject env",
     "test": "NODE_ENV=test mocha ./test/**/*.js --timeout 0 --exit",
     "snippet": "node server/snippetLoader.js",
     "domLoader": "node server/domLoader.js",
