@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
+      - run: npm install -g @aeternity/aeproject
       - run: npm install
-      - run: npm run env
+      - run: aeproject env
       - run: npm test
