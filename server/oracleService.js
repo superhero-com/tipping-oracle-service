@@ -1,4 +1,4 @@
-const {Crypto} = require('@aeternity/aepp-sdk');
+const {ORACLE_TTL_TYPES, decode} = require('@aeternity/aepp-sdk');
 const Aeternity = require("./aeternity");
 const PageParser = require("./pageParser");
 const loggerF = require("./logger");
@@ -29,13 +29,14 @@ module.exports = class OracleService {
     if (!this.oracle) this.oracle = await this.aeternity.client.getOracleObject(this.aeternity.keypair.publicKey.replace('ak_', 'ok_')).catch(() => null);
     if (!this.oracle) this.oracle = await this.aeternity.client.registerOracle("string", "string", {
       queryFee: queryFee,
-      oracleTtl: {type: 'delta', value: this.ttl}
+      oracleTtlType: ORACLE_TTL_TYPES.delta,
+      oracleTtlValue: this.ttl
     });
 
     logger.info("oracle id", this.oracle.id);
 
     if (this.autoExtend) {
-      this.extendIfNeeded();
+      void this.extendIfNeeded();
       this.extendIfNeededInterval = setInterval(() => {
         this.extendIfNeeded();
       }, (this.ttl / 5) * (60 / 3) * 1000); // every ttl/5 blocks
@@ -61,13 +62,12 @@ module.exports = class OracleService {
     logger.debug("oracle query polling started")
   };
 
-  respond = async (queries) => {
-    let query = Array.isArray(queries) ? queries.sort((a, b) => a.ttl - b.ttl)[queries.length - 1] : queries;
+  respond = async (query) => {
     if (!query || query.response !== "or_Xfbg4g==") return; //return early on no or non-empty response;
 
     const responseLogger = loggerF(module, query.id);
 
-    const queryString = String(Crypto.decodeBase64Check(query.query.slice(3)));
+    const queryString = String(decode(query.query));
     const queryArgument = queryString.split(";");
     responseLogger.info("oracle got query", queryString);
 
@@ -77,7 +77,11 @@ module.exports = class OracleService {
 
     if (parseResult) {
       responseLogger.info("oracle will respond", parseResult);
-      await this.oracle.respondToQuery(query.id, parseResult, {responseTtl: {type: 'delta', value: 20}});
+
+      await this.oracle.respondToQuery(query.id, parseResult, {
+        responseTtlType: ORACLE_TTL_TYPES.delta,
+        responseTtlValue: query.responseTtl.value,
+      }).then(() => responseLogger.info("oracle responded")).catch(responseLogger.error)
     } else {
       responseLogger.info("oracle will not respond, no result found in page")
     }
@@ -92,7 +96,7 @@ module.exports = class OracleService {
   };
 
    isRunning = async () => {
-    return typeof this.stopPollQueries === 'function' && (await this.aeternity.client.height()) < this.oracle.ttl;
+    return typeof this.stopPollQueries === 'function' && (await this.aeternity.client.getHeight()) < this.oracle.ttl;
   }
 };
 

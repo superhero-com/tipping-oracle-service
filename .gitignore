@@ -1,10 +1,9 @@
 node_modules
 .aeproject-store
 .DS_Store
-package-lock.json
 *.iml
 .idea
 .data
 data
 
-*.aes.js
+generated/*.aes.js
