@@ -1,0 +1,281 @@
+[
+  {
+    "namespace": {
+      "name": "ListInternal",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "List",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "String",
+      "typedefs": []
+    }
+  },
+  {
+    "contract": {
+      "event": {
+        "variant": [
+          {
+            "QueryOracle": [
+              "string",
+              "address"
+            ]
+          },
+          {
+            "CheckPersistClaim": [
+              "string",
+              "address",
+              "int"
+            ]
+          }
+        ]
+      },
+      "functions": [
+        {
+          "arguments": [
+            {
+              "name": "minimum_amount_of_oracles",
+              "type": "int"
+            },
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "init",
+          "payable": false,
+          "returns": "OracleService.state",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "oracle",
+              "type": "OracleService.oracle_type"
+            }
+          ],
+          "name": "add_oracle",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "id",
+              "type": "int"
+            }
+          ],
+          "name": "remove_oracle",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "minimum_amount_of_oracles",
+              "type": "int"
+            }
+          ],
+          "name": "set_minimum_amount_of_oracles",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "url",
+              "type": "string"
+            },
+            {
+              "name": "expected_account",
+              "type": "address"
+            }
+          ],
+          "name": "query_oracle",
+          "payable": true,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "url",
+              "type": "string"
+            },
+            {
+              "name": "account",
+              "type": "address"
+            },
+            {
+              "name": "recheck",
+              "type": "bool"
+            }
+          ],
+          "name": "check_persist_claim",
+          "payable": false,
+          "returns": "OracleService.success_claim",
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "get_state",
+          "payable": false,
+          "returns": "OracleService.state",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "estimate_query_fee",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "checked_oracles",
+          "payable": false,
+          "returns": {
+            "list": [
+              "OracleService.oracle_type"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "name": "unsafe_check_oracle_answers",
+          "payable": false,
+          "returns": {
+            "list": [
+              {
+                "option": [
+                  "string"
+                ]
+              }
+            ]
+          },
+          "stateful": false
+        }
+      ],
+      "kind": "contract_main",
+      "name": "OracleService",
+      "payable": false,
+      "state": {
+        "record": [
+          {
+            "name": "trusted_oracles",
+            "type": {
+              "map": [
+                "int",
+                "OracleService.oracle_type"
+              ]
+            }
+          },
+          {
+            "name": "trusted_oracle_seq",
+            "type": "int"
+          },
+          {
+            "name": "oracle_queries",
+            "type": {
+              "map": [
+                "string",
+                "OracleService.oracle_query_tuples"
+              ]
+            }
+          },
+          {
+            "name": "minimum_amount_of_oracles",
+            "type": "int"
+          },
+          {
+            "name": "success_claimed_urls",
+            "type": {
+              "map": [
+                "string",
+                "OracleService.success_claim"
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "type": "address"
+          }
+        ]
+      },
+      "typedefs": [
+        {
+          "name": "oracle_type",
+          "typedef": {
+            "oracle": [
+              "string",
+              "string"
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "oracle_query_tuples",
+          "typedef": {
+            "list": [
+              {
+                "tuple": [
+                  "OracleService.oracle_type",
+                  {
+                    "oracle_query": [
+                      "string",
+                      "string"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "success_claim",
+          "typedef": {
+            "record": [
+              {
+                "name": "success",
+                "type": "bool"
+              },
+              {
+                "name": "account",
+                "type": "address"
+              },
+              {
+                "name": "percentage",
+                "type": "int"
+              }
+            ]
+          },
+          "vars": []
+        }
+      ]
+    }
+  }
+]

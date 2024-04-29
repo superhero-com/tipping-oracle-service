@@ -20,7 +20,8 @@ describe('Page Parser', () => {
     assert.equal(result, expectedAddress);
   });
 
-  it('Follow BitLy, Parse Tweet to Profile', async () => {
+  // not working as tweet doesn't exist any more
+  it.skip('Follow BitLy, Parse Tweet to Profile', async () => {
     const expectedAddress = "ak_y87WkN4C4QevzjTuEYHg6XLqiWx3rjfYDFLBmZiqiro5mkRag";
     const url = "https://bit.ly/2Glxfg2"; //"https://twitter.com/thepiwo/status/1252636937699106816";
 

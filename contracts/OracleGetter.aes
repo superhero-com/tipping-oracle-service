@@ -5,9 +5,9 @@ contract interface OracleService =
   type oracle_query_tuples = list(oracle_type * oracle_query(string, string))
 
   record success_claim = { success : bool, account : address, percentage : int }
-  record state = { trusted_oracles : map(int, oracle_type), trusted_oracle_seq : int, oracle_queries : map(string, oracle_query_tuples), minimum_amount_of_oracles : int, success_claimed_urls : map(string, success_claim), owner : address }
+  record state_workaround = { trusted_oracles : map(int, oracle_type), trusted_oracle_seq : int, oracle_queries : map(string, oracle_query_tuples), minimum_amount_of_oracles : int, success_claimed_urls : map(string, success_claim), owner : address }
 
-  entrypoint get_state : () => state
+  entrypoint get_state : () => state_workaround
 
 main contract OracleGetter =
 

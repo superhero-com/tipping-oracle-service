@@ -1,4 +1,4 @@
-const {Universal, Node, MemoryAccount, Crypto} = require('@aeternity/aepp-sdk');
+const {Node, MemoryAccount, Crypto, AeSdk, generateKeyPair} = require('@aeternity/aepp-sdk');
 const fs = require('fs');
 const path = require('path');
 const qrcode = require('qrcode-terminal');
@@ -16,15 +16,13 @@ module.exports = class Aeternity {
   init = async (keyPair, nodeUrl = null) => {
     if (!this.client) {
       this.keypair = this.getKeyPair(keyPair);
-      this.client = await Universal({
+      this.client = new AeSdk({
         nodes: [
           {
             name: 'mainnetNode',
-            instance: await Node({
-              url: process.env.NODE_URL || nodeUrl || testUrl,
-            }),
+            instance: new Node(process.env.NODE_URL || nodeUrl || testUrl),
           }],
-        accounts: [MemoryAccount({keypair: this.keypair})],
+        accounts: [new MemoryAccount(this.keypair.secretKey)],
       });
     }
   };
@@ -35,9 +33,9 @@ module.exports = class Aeternity {
     const keypairFile = path.resolve(__dirname, "../.data/keypair.json");
     const persisted = fs.existsSync(keypairFile);
     if (persisted) {
-      return JSON.parse(fs.readFileSync(keypairFile), "utf-8");
+      return JSON.parse(fs.readFileSync(keypairFile, "utf-8"));
     } else {
-      const keypair = Crypto.generateKeyPair();
+      const keypair = generateKeyPair();
       fs.writeFileSync(keypairFile, JSON.stringify(keypair), "utf-8");
       return keypair;
     }
@@ -47,9 +45,9 @@ module.exports = class Aeternity {
     this.stopAwaitFunding = true;
   }
 
-  timeoutAwaitFunding = async (fundingAmount) => {
+  timeoutAwaitFunding = (fundingAmount) => {
     if (!this.stopAwaitFunding) setTimeout(() => {
-      this.awaitFunding(fundingAmount)
+      void this.awaitFunding(fundingAmount)
     }, 120 * 1000);
   }
 
@@ -71,6 +69,7 @@ module.exports = class Aeternity {
         }, 2000);
       });
     } else {
+      logger.debug("waiting for funding");
       this.timeoutAwaitFunding(fundingAmount)
     }
   };
